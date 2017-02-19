@@ -1,0 +1,88 @@
+/*กำหนดการแสดงผลขั้นต้น*/
+body {
+	font-family:Tahoma;
+	
+	background:#666666;
+	margin:0;
+	font-size:13px;
+	height:100%;
+}
+/*กำหนด link*/
+a:link,a:visited,a:active{
+	text-decoration:none;
+	color:#00F;
+}
+a.ex1:link,a.ex1:active,a.ex1:visited { color:black;}
+a:hover{
+	text-decoration:underline;
+}
+/*กำหนดการแสดงผลของ html5 tag */
+footer, header, figure, section, nav {
+	display:block;
+}
+
+#menu_bar {
+	width:1000px;
+	height:30px;
+	background:#000;
+	-webkit-border-top-left-radius: 0px;
+	-webkit-border-bottom-right-radius: 10px;
+	-webkit-border-bottom-left-radius: 10px;
+	-moz-border-radius-topleft: 0px;
+	-moz-border-radius-bottomright: 10px;
+	-moz-border-radius-bottomleft: 10px;
+	border-top-left-radius: 0px;
+	border-bottom-right-radius: 10px;
+	border-bottom-left-radius: 10px;
+}
+.container{
+	width:990px; margin:0 auto; 
+	padding:10px 5px 10px 5px;
+	min-height:100%;
+	height:auto !important;
+	height:100%;
+	background:#CCCCCC; 
+	position:relative; top:20px; 
+}
+#landing { text-align:center; padding:10pt; background:#33FF99;border:#030 3px solid;}
+/*เรียกไฟล์รูป loading เพื่อแสดงสถานะ*/
+.loading{
+	background:url(../../../common/images/icons/loading.gif) no-repeat right 0; padding-right:20px; }
+/*plugin jquery tooltips*/
+.tooltip {
+	display:none;
+	background: #FFF;
+/*	-moz-border-radius:10px 10px 10px;
+	border-radius:10px 10px 10px;
+	-webkit-border-radius:10px 10px 10px;*/
+	border:#000000 solid 2px;
+	font-size:12px;
+	padding:5px;
+	color:#fff;	
+}
+.add_new_icon{
+	background:url(/templates/skin/default/images/add_page.png) no-repeat; padding-left:18px;
+}
+.list_del_icon{
+	background:url(/templates/skin/default/images/icon/list-delete.png) no-repeat; padding-left:18px;padding-bottom:18px;
+}
+.clear-all{ clear:both; }
+.i-icon{
+	background:url(/templates/skin/default/images/qgtAaZZf7tG.png)  no-repeat ; width:18px; height:18px;
+}
+a.i-icon:hover{ background-position:0 0; float:left; margin-right:5px;}
+.ico-edit{ background-position:-18px 0; float:left; margin-right:5px;}
+.ulmenu{ padding:0;margin:0;list-style:none;}
+input[disabled]{ background:#CCCCCC;}
+.expanded-group{
+	background: url("http://jquery-datatables-row-grouping.googlecode.com/svn/trunk/media/images/minus.jpg") no-repeat scroll left center transparent;
+	padding-left: 15px !important
+
+}
+.collapsed-group{
+	background: url("http://jquery-datatables-row-grouping.googlecode.com/svn/trunk/media/images/plus.jpg") no-repeat scroll left center transparent;
+	padding-left: 15px !important
+
+}
+
+

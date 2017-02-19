@@ -1,0 +1,201 @@
+{include file = 'header.tpl.html'}
+<style>
+ul.token-input-list-facebook{
+	width:455px;
+}
+</style>
+<script>
+$(function(){
+
+	$(".rdel").click(function(){
+		if(!confirm("คุณต้องการลบข้อมูลอาคารเรียนหรือไม่")) return;
+		$this = $(this);
+		$this.addClass("loading");
+		$.post("/edu/building",{ "del":$this.attr("rel"),"building_name":$this.attr("data-rel")},function(data){
+			if(data.result){
+					$this.parents("tr").fadeOut("fast", function(){
+						$this.parents("tr").remove();
+					});
+					$this.removeClass("loading");
+			}else{
+				alert("ไม่สามารถลบได้");
+				$this.removeClass("loading");
+			}
+		},'json');
+		return(false);
+	});
+	
+});
+	function chkValue(elm){
+		var filter = /^[0-9]*$/;
+		if(!filter.test(elm.value)) {
+			alert('ขออภัย กรุณาป้อนตัวเลขเท่านั้น');
+			elm.value = '';
+			elm.focus();
+			return false;
+		}else{
+			if(elm.value.length>=3){
+			$("#status_bar").html('<img src="../../../common/images/icons/loading.gif" align="absmiddle">&nbsp;Checking availability...');
+			 $.ajax({  
+    		type: "POST",  
+			url: "/edu/building",  
+			data: "chkAvaliable="+ elm.value,  
+			success: 
+				function(msg){
+			 		$("#status_bar").ajaxComplete(function(event, request, settings){ 
+					if(msg == 'OK'){ 
+						$(this).html('&nbsp;<img src="../../../common/images/icons/accepted.png" align="absmiddle"> <font color="Green"> Available </font>');
+						return true;
+					}else{  
+						$(this).html(msg);
+						return false;
+					}   
+				});
+				}
+			});
+		}else{
+			$("#status_bar").html('<font color="red">กรุณากรอกให้มากกว่า <strong>3</strong> ตัวอักษร</font>');
+			return false;
+		}
+	}
+	}
+</script> 
+<!-- CONTENT -->
+<div class="container">
+  <div> 
+    {if $page.view eq "list"}
+    <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > จัดการอาคาร</div>
+
+    <section style=" width:100%; padding-bottom:30px;">
+      
+        <ul style="padding:0; list-style:none;">
+         <a href="/edu/building/form/new" class="k-button ex1" > <li class="add_new_icon">เพิ่มอาคารเรียนใหม่</li></a>
+        </ul>
+      
+      <table  width="100%" cellpadding="3" id="tblist">
+        <thead  style="text-decoration:underline; font-weight:bold;" class="k-header">
+          <tr>
+            <th width="68">เลขที่อาคาร</th>
+            <th width="407">ชื่ออาคาร</th>
+            <th width="111">จำนวนชั้นทั้งหมด</th>
+            <th width="112">วิทยาเขต</th>
+            <th width="117">สถานะ</th>
+            <th width="123">ดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {foreach $page.all as $row}
+          <tr class="rowhl" valign="top">
+            <td align="center">{$row.building_id}</td>
+            <td>{$row.building_name}</td>
+            <td align="center">{$row.total_floor}</td>
+            <td align="center">{$row.campus}</td>
+            <td align="center">{$row.status1}</td>
+            <td align="left">
+            <ul class="ulmenu">
+              	<li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"> <a href="/edu/building/form/edit?id={$row.building_id}">แก้ไขรายการ</a>
+                <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"> <a href="#" class="rdel" rel="{$row.building_id}" data-rel="{$row.building_name}">ลบรายการ</a></li>
+            </ul></td>
+          </tr>
+          {/foreach}
+        </tbody>
+      </table>
+    </section>
+    {elseif $page.view eq "form"}
+    <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/building" style="text-decoration:underline;">จัดการอาคาร</a> > เพิ่มอาคาร</div>
+    {if !empty($res.callback)}
+      <p id="landing">
+      {$res.callback.result}<br>
+	หากต้องการกำหนดห้องเรียน กรุณา <a href="/edu/building_room">คลิ๊กที่นี้</a>
+    </p>
+    
+</div>
+    {/if}
+   <div>
+    <form id="addnew" method="post" action="" >
+      <fieldset>
+        <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:#FFF 1px solid;">
+          <thead class="k-header">
+          <tr>
+            <th colspan="2">แบบฟอร์มบันทึก และแก้ไขอาคารเรียน</th>
+          </tr>
+          </thead>
+          <tbody>
+
+          <tr>
+            <td width="20%">รหัสอาคาร :</td>
+            <td width="80%"><input name="building_id" class="k-textbox" value="{$row.building_id}" size="2" maxlength="3" required {if !empty($row.building_id)} readonly {/if} onKeyUp="chkValue(this),checkDex(this)" style="float:left;"><div id="status_bar" style="position:relative; float:left; padding:3px;"></div></td>
+            </tr>
+          <tr>
+            <td>ชื่ออาคาร :</td>
+            <td><input name="building_name" class="k-textbox" value="{$row.building_name}" size="70" maxlength="255" required></td>
+          </tr>
+          <tr>
+            <td>Building Name :<br/>
+             (if available)</td>
+            <td><input name="building_nameEN" value="{$row.building_nameEN}" size="70" maxlength="255" onKeyUp='checkEngChar(this)' required class="k-textbox"></td>
+          </tr>
+      
+          <tr>
+            <td>วิทยาเขต :</td>
+            <td>
+            <select name="campus">
+            {if $row.campus eq "เชียงใหม่"}
+            <option selected>เชียงใหม่</option>
+            <option>แพร่</option>
+            <option>ชุมพร</option>
+            {elseif $row.campus eq "แพร่"}
+            <option selected>แพร่</option>
+            <option>เชียงใหม่</option>
+            <option>ชุมพร</option>
+            {else}
+            <option selected>ชุมพร</option>
+            <option>แพร่</option>
+            <option>เชียงใหม่</option>
+            {/if}
+            </select>
+            <!--<input name="campus" value="{$row.campus}" size="70" maxlength="255" class="k-textbox" {if !empty($row.campus)} readonly {/if} required>--></td>
+          </tr>
+          <tr>
+            <td>จำนวนชั้น :</td>
+            <td><input name="total_floor" value="{$row.total_floor}" size="5" maxlength="2" class="k-textbox" required onKeyUp="return checkDex(this)"></td>
+          </tr>
+          <tr>
+            <td>สถานะ :</td>
+            <td><select name="status">
+              {if !empty($row.status)}
+              {if $row.status == 1}
+              <option value="1" selected>เปิดใช้งาน</option>
+              <option value="0">ยกเลิกการใช้งาน</option>
+              <option value="2">รอการอนุมัติ</option>
+              {elseif $row.status == 2}
+              <option value="2" selected>รอการอนุมัติ</option>
+              <option value="0" >ยกเลิกการใช้งาน</option>
+              <option value="1">เปิดใช้งาน</option>
+              {else}
+              <option value="0" selected>ยกเลิกการใช้งาน</option>
+              <option value="1">เปิดใช้งาน</option>
+              <option value="2">รอการอนุมัติ</option>
+              {/if}
+              {else}
+              <option value="1">เปิดใช้งาน</option>
+              <option value="0">ยกเลิกการใช้งาน</option>
+              <option value="2">รอการอนุมัติ</option>
+              {/if}
+              </select>
+              </td>
+          </tr>
+          <tr>
+          	<td colspan="2" align="center"><input type="submit" name="operation" value="{if empty($row)}เพิ่มข้อมูล{else}แก้ไขข้อมูล{/if}" onClick="return confirm('ยืนยันข้อมูล')"></td>
+          </tr>
+          </tbody>
+      </table>
+        </fieldset>
+      </form>
+  
+    </div>
+    {/if}
+  </div>
+</div>
+</body>
+</html>

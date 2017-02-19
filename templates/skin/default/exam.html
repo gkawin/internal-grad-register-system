@@ -1,0 +1,49 @@
+{include file = 'header.tpl.html'}
+
+<div class="container">
+{if $page.view eq "list"}
+<section>
+ <table  width="100%" cellpadding="3" id="tblist">
+       <thead style="text-decoration:underline; font-weight:bold;">
+          <tr class="k-header">
+            <th width="98">รหัสนักศึกษา</th>
+            <th width="216">ชื่อนักศึกษา</th>
+            <th width="167">หลักสูตร</th>
+            <th width="182">ระดับปริญญา</th>
+            <th width="283">สถานะ</th>
+            <th width="283">ดำเนินการ</th>
+            </tr>
+        </thead>
+        <tbody>
+          {foreach $page._gradList as $row}
+          <tr class="rowhl" valign="top">
+          <style>
+          #viewschedule{ color:#00F;}
+		  #viewschedule:hover{ color:#FF0000;}
+          </style>
+            <td><a href="/edu/exam/view?graduateid={$row.Graduate_ID}" id="viewschedule">{$row.Graduate_ID}</a></td>
+            <td><div style="margin-bottom:5px;">{$row.Title_Name}{$row.Graduate_Name} {$row.Graduate_Lastname}</div><div>{$row.Title_Name_English}{$row.Graduate_Name_English} {$row.Graduate_Lastname_English}</div></td>
+            <td width="167">{$row.major_name}</td>
+            <td width="182">{$row.Degree}</td>
+            <td width="283">{if $row.graduate_status == 0}
+              กำลังศึกษา
+              {elseif $row.graduate_status == 1}
+              สำเร็จ
+  {elseif $row.graduate_status == 2}
+              ลาออก
+  {elseif $row.graduate_status == 3}
+              ลาพัก
+  {elseif $row.graduate_status == 4}
+              พ้นสภาพ
+  {/if}</td>
+            <td width="283">&nbsp;</td>
+          </tr>
+          {/foreach}
+        </tbody>
+      </table>
+</section>
+{/if}
+<div class="clear-all"></div>
+</div>
+</body>
+</html>

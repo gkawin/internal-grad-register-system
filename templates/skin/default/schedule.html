@@ -1,0 +1,147 @@
+{include file = 'header.tpl.html'}
+<style>
+
+</style>
+<!-- CONTENT -->
+<div class="container">
+{if $page.view eq "list"}
+	<div>
+    <h1 style="color:#0000CC;">ตารางเรียน</h1>
+    	 <table  width="100%" cellpadding="3" id="tblist">
+       <thead style="text-decoration:underline; font-weight:bold;">
+          <tr class="k-header">
+            <th width="71">รหัสนักศึกษา</th>
+            <th width="170">ชื่อนักศึกษา</th>
+            <th width="165">สาขาวิชา</th>
+            <th width="165">ปริญญา</th>
+            <th width="165">สถานะ</th>            </tr>
+        </thead>
+        <tbody>
+          {foreach $page.all as $row}
+          <tr class="rowhl" valign="top">
+          <style>
+          #viewschedule{ color:#00F;}
+		  #viewschedule:hover{ color:#FF0000;}
+          </style>
+            <td><a href="/edu/schedule/view?graduateid={$row.Graduate_ID}" id="viewschedule">{$row.Graduate_ID}</a></td>
+            <td><div style="margin-bottom:5px;">{$row.Title_Name}{$row.Graduate_Name} {$row.Graduate_Lastname}</div><div>{$row.Title_Name_English}{$row.Graduate_Name_English} {$row.Graduate_Lastname_English}</div></td>
+            <td width="165">{$row.major_name}</td>
+            <td width="165">{$row.Degree}</td>
+            <td width="165">{if $row.graduate_status == 0}
+            กำลังศึกษา
+            {elseif $row.graduate_status == 1}
+            สำเร็จ
+            {elseif $row.graduate_status == 2}
+            ลาออก
+            {elseif $row.graduate_status == 3}
+            ลาพัก
+            {elseif $row.graduate_status == 4}
+            พ้นสภาพ
+            {/if}
+            </td>
+          </tr>
+          {/foreach}
+        </tbody>
+      </table>
+    </div>
+{elseif $page.view eq "schedule"}
+<style>
+span.layout{ margin-right:30px; display:block;}
+</style>
+<section class="css-table">
+
+	<table width="100%" border="0" align="center" cellpadding="5">
+    <tr>
+      <td colspan="2"><h1 style="color:#0000CC;">ตารางเรียน/สอบของรายวิชาที่ลงทะเบียนไว้แล้ว</h1></td>
+      </tr>
+    <tr>
+      <td width="101">ชื่อ - สกุล :</td>
+      <td width="863">{$page._gradinfo.Title_Name}{$page._gradinfo.Graduate_Name} {$page._gradinfo.Graduate_Lastname}</td>
+    </tr>
+    <tr>
+      <td><span class="layout">สถานภาพ :</span></td>
+      <td>{if $page._gradinfo.Status ==0}
+      กำลังศึกษา
+      {elseif $page._gradinfo.Status == 1}
+      สำเร็จการศึกษา 
+       {elseif $page._gradinfo.Status == 2}
+       ลาออก 
+       {elseif $page._gradinfo.Status == 3}
+       ลาพัก 
+       {elseif $page._gradinfo.Status == 4}
+       พ้นสภาพ
+       {/if}</td>
+    </tr>
+    <tr>
+      <td><span class="layout">หลักสูตร :</span></td>
+      <td>{$page._gradinfo.program_name} {$page._gradinfo.major_name} ({$page._gradinfo.program_suite})</td>
+    </tr>
+    <tr>
+      <td><span class="layout">คณะ :</span></td>
+      <td>{$page._gradinfo.fac_name}</td>
+    </tr>
+    <tr>
+      <td>ปีการศึกษา</td>
+      <td>ปีการศึกษา ณ ขณะนี้ <select id="semester">
+      <option>---กรุณาเลือก----</option>
+      {foreach $page.itemSemester as $item}
+      <option>{$item}</option>
+      {/foreach}
+      </select></td>
+    </tr>
+    </table>
+
+    <table border="0" width="100%">
+    {foreach $page.times as $days}
+    
+    <tr align="center" BGCOLOR="#999999">
+    	  <th class="k-header" style="padding-bottom:15px;padding-top:15px;">{$days@key}</th>
+        
+        {foreach $days as $t}
+        {if $days@index==0}
+        <th class="k-header">{$t@key}.00 - {$t@key+1}.00</th>
+        {elseif $t eq null}
+        <td ></td>
+        {elseif $t neq null}
+        <td nowrap colspan="{$t.col}" bgcolor="#00FF33" valign="top"><a href="/edu/course/classinfo?courseid={$t.course_id}&semester={$t.term}&term={$t.term}" style="font-weight:bold;color:#00F;">{$t.course_id}</a><br/>({$t.credit}) {$t.section},{$t.room_name}<br/>{$t.building_id}</td> 
+        {/if}
+        
+     	{/foreach}
+    </tr>
+    {foreachelse}
+    <tr>
+    <td>HELLO</td>
+    </tr>
+    {/foreach}
+    </table>
+   <strong> * ข้อมูลที่ปรากฎอยู่ในตารางเรียนประกอบด้วย รหัสวิชา (จำนวนหน่วยกิต) กลุ่ม, ห้องเรียนและอาคาร ตามลำดับ</strong>
+    <table width="55%" align="center" cellpadding="5" border="1">
+    <tr class="k-header">
+    <th colspan="5">รายละเอียดวิชาและกำหนดการสอบ</th>
+    </tr>
+  
+    <tr class="k-header">
+    <td width="14%" align="center">รหัสวิชา</td>
+    <td width="32%" align="center">ชื่อรายวิชา</td>
+    <td width="9%" align="center">กลุ่ม</td>
+    <td width="22%" align="center">สอบกลางภาค</td>
+    <td width="23%" align="center">สอบปลายภาค</td>
+    </tr>
+    {foreach $page.classinfo as $classinfo}
+      <tr>
+      <td align="center">{$classinfo.course_id}</td>
+      <td align="center">{$classinfo.course_name}</td>
+      <td align="center">{$classinfo.section}</td>
+      <td align="center">{$classinfo.date_midexam}</td>
+      <td align="center">{$classinfo.date_finalexam}</td>
+    </tr>
+    {/foreach}
+    </table>
+
+</section>
+
+{/if}
+<div class="clear-all"></div>
+</div>
+</body>
+</html>

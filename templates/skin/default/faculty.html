@@ -1,0 +1,367 @@
+{include file = 'header.tpl.html'}
+<style>
+ul.token-input-list-facebook{
+	width:455px;
+}
+</style>
+<script>
+$(function(){
+	$(".rdel").click(function(){
+		if(!confirm("คุณต้องการลบข้อมูลคณะหรือไม่")) return;
+		$this = $(this);
+		$.post("/edu/faculty",{ "del":$this.attr("rel"),"fac_name" : $this.attr("data-rel")},function(data){
+			if(data.result){
+				$this.parents("tr").fadeOut("fast", function(){
+				$this.parents("tr").remove();
+				});
+			}else{
+				alert("ไม่สามารถลบได้ เนื่องจากมีสาขาวิชาค้างอยู่ กรุณาแก้ไข")
+			}
+		},'json');
+		return(false);
+	});
+	$(".delmajor").click(function(){
+		if(!confirm("คุณต้องการลบข้อมูลสาขาวิชาหรือไม่")) return;
+		$this = $(this);
+		$.post("/edu/faculty/major/del",{ "del":$this.attr("rel"),"major_name" : $this.attr("data-rel")},function(data){
+			if(data.result){
+				$this.parents("tr.innerlist").fadeOut("fast", function(){
+				$this.parents("tr.innerlist").remove();
+				});
+			}else{
+				alert("ไม่สามารถลบได้ เนื่องจาก\n"+
+					"- มีบุคลากรสังกัดอยู่\n"+
+					"- มีหลักสูตรหรือแผนการศึกษาที่อ้างอิงกับสาขาวิชานี้\n"+
+					"- มีนักศึกษาสังกัดอยู่\n"+
+					"กรุณาแก้ไขที่หมวดสาขาวิชาก่อนทำการลบครั้งต่อไป กรุุณาาแก้ไข");		
+			}
+		},'json');
+		return(false);
+	});
+});
+	function checkEngChar(elm) {
+		var filter = /^[a-zA-Z\d!@#$%\^\&\*\(\)\-\+~\[\]{}\\|;:'"\M<>\?\/,\.\s=_]*$/;
+		if(!filter.test(elm.value)) {
+			alert('Sorry, only english charactors are allowed here.');
+			elm.value = '';
+			elm.focus();
+		}
+	}
+	function checkDex(elm){
+		var filter = /^[0-9]*$/;
+		if(!filter.test(elm.value)) {
+			alert('ขออภัย กรอกเฉพาะตัวเลขเท่านั้น');
+			elm.value = '';
+			elm.focus();
+		}
+	}
+	function chkValue(value){
+		if(value.length >=6){
+			$("#status_bar").html('<img src="../../../common/images/icons/loading.gif" align="absmiddle">&nbsp;Checking availability...');
+			 $.ajax({  
+    		type: "POST",  
+			url: "/edu/faculty",  
+			data: "chkAvaliable="+ value,  
+			success: 
+				function(msg){
+			 		$("#status_bar").ajaxComplete(function(event, request, settings){ 
+					if(msg == 'OK'){ 
+						$(this).html('&nbsp;<img src="../../../common/images/icons/accepted.png" align="absmiddle"> <font color="Green"> Available </font>');
+						return true;
+					}else{  
+						$(this).html(msg);
+						return false;
+					}   
+				});
+				}
+			});
+		}else{
+			$("#status_bar").html('<font color="red">กรุณากรอกให้มากกว่า <strong>6</strong> ตัวอักษร</font>');
+			return false;
+		}
+		return false;
+
+	}	
+	function chkValue_major(type,o){
+		var bOpenchk = false;
+		var data = "";
+		if(o.value.length >=2){
+			if(type === 'major_id' && o.value.length == 2){
+				bOpenchk = true;
+				$this = $(".status_bar_major")
+				data = document.getElementById("major_id").value+o.value;
+			}else if((type === 'prefix_name' || type === 'prefix_nameEN')&& o.value.length == 2){
+				bOpenchk = true;
+				$this = (type === 'prefix_name')? $(".status_bar_prefix_name") : $(".status_bar_prefix_nameEN");
+				data = o.value;
+			}
+			if(bOpenchk){
+				$this.html('<img src="../../../common/images/icons/loading.gif" align="absmiddle">&nbsp;Checking availability...');
+				$.post("/edu/faculty/major/chk",
+					{
+						"chktype":type,
+						"data":data
+					},
+					function(respond){
+						if(respond.result){	
+							$this.html('&nbsp;<img src="../../../common/images/icons/accepted.png" align="absmiddle"> <font color="Green"> Available </font>');
+							return true;
+						}else{
+							$this.html('&nbsp;<font color="red"> ไม่ว่าง </font>');
+							return false;
+						}
+					},'json');
+			}else{
+				return false;
+			}
+		}//else{
+			//$this.html('&nbsp;<font color="red"> กรอกให้มากกว่า 2 อักษร </font>');
+		//	return false;
+		//}
+	}
+</script> 
+<!-- CONTENT -->
+<div class="container">
+  {if $page.view eq "list"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > จัดการคณะ</div>
+  <section>
+    <ul style="padding:0;">
+      <li class="k-button"><a href="/edu/faculty/form/new"   class="add_new_icon ex1"> เพิ่มคณะที่เกี่ยวข้องใหม่</a></li>
+    </ul>
+    <table  width="100%" cellpadding="3" class="tblist" id="tblist">
+      <thead style="text-decoration:underline; font-weight:bold;" class="k-header">
+        <tr>
+          <td width="705">ชื่อคณะ</td>
+          <td width="70" align="center">Website</td>
+          <td width="75" align="center">สถานะ</td>
+          <td width="104" align="center">ดำเนินการ</td>
+        </tr>
+      </thead>
+      <tbody>
+        {foreach $page.all as $row}
+        <tr class="rowhl" valign="top">
+          <td><ul class="treeView">
+              <li><span style="display:block;">
+                {$row.fac_name}
+                </span> <span style="display:block;">
+                {$row.fac_nameEN}
+                </span>
+                <ul>
+                  <table width="100%">
+                    <thead class="k-header">
+                      <tr>
+                        <th width="10%">รหัสสาขา</th>
+                        <th width="60%">ชื่อสาขาวิชา</th>
+                        <th width="10%">คำนำหน้า</th>
+                        <th width="10%">website</th>
+                        <th width="10%">ดำเนินการ</th>
+                      </tr>
+                    </thead>
+                    {foreach $page._major as $_major}
+                    {if $row.fac_id == $_major.fac_id}
+                    <tr class="innerlist">
+                      <td style="text-align: center">{$_major.major_id}</td>
+                      <td>{$_major.major_name}</td>
+                      <td>{$_major.prefix_name} / {$_major.prefix_nameEN}</td>
+                      <td align="center"><a href="{$_major.website}" target="_blank"> คลิ๊กเพื่อเยี่ยมชม</a></td>
+                      <td>
+                          <ul class="ulmenu">
+                            <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"><a href="/edu/faculty/major/edit?id={$_major.major_id}&facid={$row.fac_id}&facname={$row.fac_name}"> แก้ไข</a></li>
+                            <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"><a href="#" class="delmajor" rel="{$_major.major_id}" data-rel="{$_major.major_name}"> ลบ</a></li>
+                          </ul>
+                        </td>
+                    </tr>
+                    {/if}
+                    {/foreach}
+                  </table>
+                </ul>
+              </li>
+            </ul></td>
+          <td  valign="top" align="center"><a href="{$row.website}" target="_blank">
+            คลิ๊กเพื่อเยี่ยมชม
+            </a></td>
+          <td align="center">{$row.status1}</td>
+          <td valign="top" ><ul class="ulmenu">
+          		<li><img src="/templates/skin/HTML5 Admin Template/images/icn_new_article.png" style="vertical-align:middle;"> <a href="/edu/faculty/major/new?underfacid={$row.fac_id}&facname={$row.fac_name}">เพิ่มสาขาวิชา</a></li>
+              <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"> <a href="/edu/faculty/form/edit?id={$row.fac_id}">แก้ไขคณะวิชา</a></li>
+              <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"> <a href="#" class="rdel" rel="{$row.fac_id}" data-rel="{$row.fac_name}">ลบคณะวิชา</a></li>
+            </ul></td>
+        </tr>
+        {/foreach}
+      </tbody>
+    </table>
+  </section>
+  {elseif $page.view eq "form"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/faculty" style="text-decoration:underline;">จัดการคณะและสาขาวิชา</a> >
+    {if empty($page.edit)}
+    เพิ่มคณะใหม่
+    {else}
+    แก้ไขคณะ
+    {/if}
+  </div>
+  {if !empty($res.callback.result)}
+
+    <p id="landing">{$res.callback.result}
+      <br>
+      กลับสู่หน้าหลักเพื่อเพิ่มสาขาวิชา <a href="/edu/faculty">คลิ๊กที่นี้</a>
+    </p>
+
+  {/if}
+  <div>
+    <form id="addnew" method="post" action="">
+      <fieldset>
+        <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:1px solid #000;">
+          <thead class="k-header">
+            <tr>
+              <th colspan="2" scope="col">แบบฟอร์มบันทึก และแก้ไขคณะที่เกี่ยวข้อง</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td width="20%">ชื่อคณะ :</td>
+              <td width="80%"><input name="fac_name" value="{$page.edit.fac_name}" size="70" maxlength="255" onKeyUp="return chkValue(this.value),checkThai(this)" style="float:left;" class="k-textbox" required validationMessage="กรอกชื่อคณะ">
+                <div id="status_bar" style="position:relative; float:left; padding:3px;"></div></td>
+            </tr>
+            <tr>
+              <td>Faculty Name :</td>
+              <td><input name="fac_nameEN"  value="{$page.edit.fac_nameEN}" size="70" maxlength="255" onKeyUp="checkEngChar(this)" class="k-textbox" required validationMessage="Faculty Name is required"></td>
+            </tr>
+            <tr>
+              <td>website :</td>
+              <td><input name="website" type="text" value="{$page.edit.website}" size="70" maxlength="255" class="k-textbox" required>
+                *หากไม่ระบุ กรุณาใส่เครื่องหมาย -</td>
+            </tr>
+            <tr>
+              <td>สถานะ :</td>
+              <td><select name="status">
+                  {if !empty($page.edit.status)}
+                  {if $page.edit.status == 1}
+                  <option value="1" selected>ใช้งาน</option>
+                  <option value="0">ยกเลิกการใช้งาน</option>
+                  <option value="2">รอการอนุมัติ</option>
+                  {elseif $page.edit.status == 2}
+                  <option value="2" selected>รอการอนุมัติ</option>
+                  <option value="0" >ยกเลิกการใช้งาน</option>
+                  <option value="1">เปิดใช้งาน</option>
+                  {else}
+                  <option value="0" selected>ยกเลิกการใช้งาน</option>
+                  <option value="1">ใช้งาน</option>
+                  <option value="2">รอการอนุมัติ</option>
+                  {/if}
+                  {else}
+                  <option value="2">รอการอนุมัติ</option>
+                  <option value="1" selected>ใช้งาน</option>
+                  <option value="0">ยกเลิกการใช้งาน</option>
+                  {/if}
+                </select></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center"><input type="submit" name="operation" value="{if empty($row)}เพิ่มข้อมูล{else}แก้ไขข้อมูล{/if}" onClick="return confirm('ยืนยันข้อมูล')"></td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+    </form>
+  {elseif $page.view eq "major"}
+  <div>
+  	<div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> &gt; <a href="/edu/faculty" style="text-decoration:underline;">จัดการคณะและสาขาวิชา</a> &gt;{if empty($row.edit)}เพิ่มสาขาวิชาใหม่{else}แก่้ไขสาขาวิชา{/if}</div>
+    {if !empty($res.callback.result)}
+     <p id="landing">{$res.callback.result}
+      <br>
+     หากต้องการเพิ่มรายชื่ออาจารย์ กรุณา <a href="/edu/employee">คลิ๊กที่นี้</a>
+    </p>
+    {/if}
+    <div>
+      <form id="addnew" method="post" action="">
+      <fieldset>
+        <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:1px #000000 solid;">
+        <thead class="k-header">
+          <tr>
+            <th colspan="2" scope="col">แบบฟอร์มบันทึก และแก้ไขสาขาวิชาที่เกี่ยวข้อง</th>
+          </tr>
+         
+          </thead>
+          <tbody>
+ <tr>
+            <td>สังกัดคณะ :</td>
+            <td>
+            <input type="text" name="show_faculty" value="{$page._get.facname}" class="k-textbox" disabled size="70">
+            <input type="hidden" name="fac_id" value="{$page._get.underfacid}">
+            </td>
+          </tr>
+          <tr>
+            <td>รหัสสาขา :</td>
+            <td>
+            <div style="float:left;">
+            {if empty($row.edit.major_id)}
+            <input type="text" name="major_id" id="major_id" size="1" class="k-textbox" readonly value="{$page._get.underfacid}">
+            <input type="text" name="major_id1" id="major_id1" size="4" maxlength="2" onKeyUp="return chkValue_major('major_id',this),checkDex(this)" class="k-textbox" required >
+            {else}
+            <input type="text" name="major_id" id="major_id" size="4" class="k-textbox" readonly value="{$row.edit.major_id}">
+            {/if}
+            </div>
+            <div class="status_bar_major" style="float:left; padding:3px;"></div></td>
+          </tr>
+          <tr>
+            <td width="20%">ชื่อสาขาวิชา :</td>
+            <td width="80%"><input type="text" name="major_name" value="{$row.edit.major_name}" size="70" maxlength="255"  style="float:left;"  class="k-textbox" required onKeyUp="checkThai(this)"><div id="status_bar" style="position:relative; float:left; padding:3px;"></div></td>
+          </tr>
+          <tr>
+            <td>Major Name :</td>
+            <td><input name="major_nameEN" required value="{$row.edit.major_nameEN}" size="70" maxlength="255" onKeyUp="checkEngChar(this)"  class="k-textbox" ></td>
+          </tr>
+          <tr>
+            <td>ชื่อขึ้นต้นรายวิชา :</td>
+            <td><input name="prefix_name" class="k-textbox" size="3" maxlength="2" required style="float:left" onKeyUp="return chkValue_major('prefix_name',this),checkThai(this)" value="{$row.edit.prefix_name}"><div class="status_bar_prefix_name" style="position:relative; float:left; padding:3px;"></div></td>
+          </tr>
+          <tr>
+            <td>Prefix course name :</td>
+            <td><input name="prefix_nameEN" class="k-textbox" size="3" maxlength="2" required style="float:left;" onKeyUp="return chkValue_major('prefix_nameEN',this),checkEngChar(this)" value="{$row.edit.prefix_nameEN}"><div class="status_bar_prefix_nameEN" style="position:relative; float:left; padding:3px;"></div></td>
+          </tr>
+          <tr>
+            <td>website :</td>
+            <td><input name="website" type="text" value="{$row.edit.website}" size="70" maxlength="255" required  class="k-textbox">
+            *หากไม่ระบุ กรุณาใส่เครื่องหมาย -</td>
+          </tr>
+          <tr >
+            <td>สถานะ :</td>
+            <td>
+              <select name="status">
+                {if !empty($row.edit.status)}
+                {if $row.edit.status == 1}
+                <option value="1" selected>ใช้งาน</option>
+                <option value="0">ยกเลิกการใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {elseif $row.edit.status == 2}
+                <option value="2" selected>รอการอนุมัติ</option>
+                <option value="0" >ยกเลิกการใช้งาน</option>
+                <option value="1">เปิดใช้งาน</option>
+                {else}
+                <option value="0" selected>ยกเลิกการใช้งาน</option>
+                <option value="1">ใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {/if}
+                {else}
+                <option value="2">รอการอนุมัติ</option>
+                <option value="1" selected>ใช้งาน</option>
+                <option value="0">ยกเลิกการใช้งาน</option>
+                
+                {/if}
+                </select>
+              </td>
+          </tr>
+          <tr>
+          	<td colspan="2" align="center"><input type="submit" name="operation" value="{if empty($row)}เพิ่มข้อมูล{else}แก้ไขข้อมูล{/if}"onClick="return confirm('ยืนยันการเพิ่มสาขาวิชา')"/></td>
+          </tr>
+          </tbody>
+        </table>
+        </fieldset>
+      </form>
+  </div>
+  </div>  
+  {/if}
+    <div class="clear-all"></div>
+  </div>
+</div>
+</body>
+</html>

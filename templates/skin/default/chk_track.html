@@ -1,0 +1,289 @@
+{include file = 'header.tpl.html'}
+<style>
+body {
+	font-family:Tahoma;
+	background:#6D3636;
+	margin:0;
+	font-size:13px;
+	height:100%;
+}
+#linkcolorblue{
+	color:#0000FF;
+}
+#titleMsg{ font-weight:bold;}
+</style>
+<div class="container"> {if $page.view eq "main"}
+  <div style="padding:5pt;"><a href="/chk" style="text-decoration:underline;">หน้าหลัก</a> > ติดตามและตรวจสอบจบ</div>
+  <p>
+  
+  <h1>เลือกรหัสนักศึกษา เพื่อตรวจสอบจบและติดตามนักศึกษา</h1>
+  <table  width="100%" cellpadding="5" id="tblist">
+    <thead  class="k-header">
+      <tr valign="top">
+        <th width="9%">รหัสนักศึกษา</th>
+        <th width="42%">ชื่อนักศึกษา</th>
+        <th width="25%">หลักสูตร</th>
+        <th width="14%">ระดับปริญญา</th>
+        <th width="10%">สถานะภาพ</th>
+      </tr>
+    </thead>
+    <tbody>
+    
+    {foreach $row.all as $item}
+    <tr>
+      <td><a href="/chk/tracking/graduatecheck/{$item.Graduate_ID}" id="linkcolorblue"><strong> {$item.Graduate_ID} </strong></a></td>
+      <td><img src="/common/images/graduate/{$item.image}" width="64" height="64" style="margin-right:5px;float:left;"/> {$item.stdName} <br>
+        {$item.stdNameEN}</td>
+      <td>{$item.edu_program}</td>
+      <td align="center">{$item.degree_name}</td>
+      <td align="center">{switch $item.graduate_status}
+        {case 0}
+        <div style="color:#FF0000;font-weight:bold;">กำลังศึกษา</div>
+        {break}
+        {case 1}
+        <div style="color:#009900;font-weight:bold;">จบการศึกษา</div>
+        {break}
+        {case 2}
+        <div style="color:#333333;font-weight:bold;">ลาออก</div>
+        {break}
+        {case 3}
+        <div style="color:#3300FF;font-weight:bold;">รักษาสภาพ</div>
+        {break}
+        {case 4}
+        <div style="color:#663300;font-weight:bold;">รอการอนุมัติจบ</div>
+        {break}
+        {/switch}</td>
+    </tr>
+    {/foreach}
+      </tbody>
+    
+  </table>
+  </p>
+  <div class="clear-all"></div>
+  {elseif $page.view eq "graduatecheck"} 
+  <script>
+ $(function(){
+   $.post("/chk/tracking/graduatecheck/updatefront",
+   { "graduateID": '{$res.graduateID}',
+   "statusGrad":$("div#statusGrad").attr("data-rel")
+   },function(){})
+ });
+</script>
+  <div style="padding:5pt;"><a href="/chk" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/chk/tracking" style="text-decoration:underline;">ติดตามและตรวจสอบจบ</a> > รายละเอียดการติดตามและตรวจสอบจบ</div>
+  <p>
+  <h1>ติดตามและตรวจสอบจบ</h1>
+  <table width="50%" border="0" cellpadding="5" style="border:#000 solid 1px; background-color:#FFFFFF; float:left;">
+    <tbody>
+      <tr>
+        <td width="38%" rowspan="7" align="center" valign="top"><img src="/common/images/graduate/{$page.gradInfo.image}" width="162" height="162"/></td>
+        <td width="24%" id="titleMsg">ชื่อ :</td>
+        <td width="38%">{$page.gradInfo.stdName}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">รหัสนักศึกษา :</td>
+        <td>{$page.gradInfo.Graduate_ID}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">หลักสูตร :</td>
+        <td>{$page.gradInfo.program_id}
+          {$page.gradInfo.program_name}
+          สาขา
+          {$page.gradInfo.major_name}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">แผน :</td>
+        <td>{$page.gradInfo.program_suite}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">ระดับ :</td>
+        <td>{$page.gradInfo.degree_name}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">คณะ :</td>
+        <td>{$page.gradInfo.fac_name}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg"><span style="color:#009;">ผลการตรวจสอบ :</span></td>
+        <td> {if ($page.eduInfo.all_credit - $row._pass_credit) > 0}
+          <div style="color:#FF0000;font-weight:bold;" id="statusGrad" data-rel="0">กำลังศึกษา</div>
+          {elseif ($page.eduInfo.all_credit - $row._pass_credit) <= 0 }
+          {if $row.examresult && $res._reg_nocredit.result && $res._exam_qe.result && $res._exam_fe.result && $res._exam_ce.result}
+          <div style="color:#FFCC00;font-weight:bold;" id="statusGrad" data-rel="4">รอการอนุมัติจบ</div>
+          {else}
+          <div style="color:#FF0000;font-weight:bold;" id="statusGrad" data-rel="0">กำลังศึกษา</div>
+          {/if}
+          {/if}</td>
+      </tr>
+      <tr>
+        <th colspan="3" class="k-header" >หมวดหมู่ข้อมูลการศึกษา</th>
+      </tr>
+      <tr>
+        <td id="titleMsg">หน่วยกิตขั้นต่ำของหลักสูตร :</td>
+        <td colspan="2">{$page.eduInfo.all_credit} หน่วยกิต</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">หน่วยกิตที่ผ่าน :</td>
+        <td colspan="2">{$row._pass_credit}          หน่วยกิต</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">หน่วยกิตที่รอ :</td>
+        <td colspan="2">{{$page.eduInfo.all_credit}-{$row._pass_credit}} หน่วยกิต</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">ชั้นปีที่ :</td>
+        <td colspan="2">{$page._schoolyear.School_Year} </td>
+      </tr>
+      <tr>
+        <td id="titleMsg">จำนวนปีที่เรียน :</td>
+        <td colspan="2">{$page.eduInfo.years_normal} ปี</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">เรียนสูงสุด :</td>
+        <td colspan="2">{$page.eduInfo.max_years} ปี</td>
+      </tr>
+      <tr>
+        <th colspan="3" class="k-header">หมวดหมู่ข้อมูล GPA</th>
+      </tr>
+      <tr>
+        <td id="titleMsg">GPA ต่ำสุด :</td>
+        <td colspan="2">{$page.eduInfo.minimum_gpa}</td>
+      </tr>
+      <tr>
+        <td id="titleMsg">GPA ที่ได้ :</td>
+        <td colspan="2"> {if $page.eduInfo.minimum_gpa > $row._gpax} <span style="color:#F00;"><strong>{$row._gpax}</strong> (ติดต่อนักศึกษาโดยด่วน)</span> {else} <span style="color:#0C0;"><strong>{$row._gpax}</strong></span> {/if} </td>
+      </tr>
+      <tr>
+        <td id="titleMsg" valign="top">ออกใบระเบียนนักศึกษา :</td>
+        <td colspan="2"><a href="/chk/transcript/docsexport/th/{$page.gradInfo.Graduate_ID}" target="_blank" class="k-button ex1" rel="th">คลิ๊กที่นี้เพื่อสร้างใบระเบียน (ภาษาไทย)<br />
+          </a> <!--<a href="/chk/transcript/docsexport/en/{$page.gradInfo.Graduate_ID}" target="_blank" class="k-button ex1" rel="en">คลิ๊กที่นี้เพื่อสร้างใบระเบียน (English)</a>--></td>
+      </tr>
+    </tbody>
+  </table>
+  <table width="50%" border="0" cellpadding="5" style="border:#000 solid 1px; background-color:#FFFFFF; float:left;">
+    
+    <!--- SHOW WIDECARD ---> 
+    {foreach $row._plan as $h}
+    <tr>
+      <th colspan="3" class="k-header" align="left"> <span style="float:left;">{$h@key}</span> {if $h@key eq "วิทยานิพนธ์"} <span style="float:right;"> [ผล : {if ($row._plandetails.{$h@key}._reged < $row._plandetails.{$h@key}.ct_credit) ||  ($row._plandetails.{$h@key}._pass < $row._plandetails.{$h@key}.ct_credit)} <strong style="color:red;">FAIL</strong> {else} <strong style="color:green;">PASS</strong> {/if} ] </span> {else} <span style="float:right;"> [ผล : {if ($row._plandetails.{$h@key}._reged < $row._plandetails.{$h@key}.ct_credit) ||  ($row._plandetails.{$h@key}._pass < $row._plandetails.{$h@key}.ct_credit)} <strong style="color:red;">FAIL</strong> {else} <strong style="color:green;">PASS</strong> {/if} ] </span> <span style="float:right;"> [ลง : {if empty($row._plandetails.{$h@key}._reged)}0{else}{$row._plandetails.{$h@key}._reged}{/if} หน่วยกิต ] </span> <span style="float:right;"> [ทั้งหมด : {$row._plandetails.{$h@key}.ct_credit} หน่วยกิต ] </span> {/if} </th>
+    </tr>
+    <tr bgcolor="#999999">
+      <th width="53%" align="">วิชา</th>
+      <th width="19%">เกรด</th>
+      <th width="20%">ผล</th>
+    </tr>
+    {foreach $h as $item}
+    {if isset($row._reg.{$item.course_id})} <!-- วิชาได้ถูกกำหนด--> 
+    {if $row._reg.{$item.course_id}.required_type ==1}
+    <tr>
+      <td> 
+      {$item.course_id}
+      {$item.course_name}  <strong>({$item.credit} หน่วยกิต)</strong>
+      </td>
+      <td align="center"> 
+      	{$row._reg.{$item.course_id}.result_grade}<br>
+        <span style="font-size:9px;"> ({$row._reg.{$item.course_id}.term}/{$row._reg.{$item.course_id}.years+543}) </span></td>
+      <td align="center"> {if $row._reg.{$item.course_id}.result_grade == "F" } <span style="color:red;font-weight:bold;">FAIL</span> {else} <span style="color:green;font-weight:bold;">PASS</span> {/if}</td>
+    </tr>
+    {else}
+    <tr>
+      <td> 
+     {$item.course_id}
+      {$item.course_name} <strong>({$item.credit} หน่วยกิต)</strong>
+      </td>
+      <td align="center"> 
+      	{$row._reg.{$item.course_id}.result_grade}<br>
+        <span style="font-size:9px;"> ({$row._reg.{$item.course_id}.term}/{$row._reg.{$item.course_id}.years+543}) </span></td>
+      <td align="center"> {if $row._reg.{$item.course_id}.result_grade == "F" } <span style="color:red;font-weight:bold;">FAIL</span> {else} <span style="color:green;font-weight:bold;">PASS</span> {/if}</td>
+    </tr>
+    {/if}
+    
+    {else}
+  	{if $item.required_type == 1 }
+       <tr>
+         <td>
+         {$item.course_id}
+      	 {$item.course_name} <strong>({$item.credit} หน่วยกิต)</strong></td>
+         <td align="center">-</td>
+         <td align="center"><span style="color:red;font-weight:bold;">FAIL</span></td>
+       </tr>
+    {else}
+    <tr>
+         <td colspan="3" align="center"><span style="font-size:11px;color:#FF0000;">ไม่พบข้อมูลลงทะเบียน</span></td>
+       </tr>
+       {break}
+    {/if}
+    {/if}
+    {foreachelse}
+  
+    <tr>
+      <th colspan="3">ไม่พบข้อมูล</th>
+    </tr>
+    {/foreach}
+    
+    {/foreach}
+    <tr>
+      <th colspan="3" align="left" class="k-header"> <span style="float:left;">รายวิชาไม่คิดหน่วยกิต</span> <span style="float:right;"> {if !empty($row._reg_nocredit)}
+        
+        
+        [ผล : {if $res._reg_nocredit.result == false} <strong style="color:red;">FAIL</strong> {else} <strong style="color:green;">PASS</strong> {/if} ] </span> {else}
+        [ผล : <strong style="color:red;">FAIL</strong> ] </span> {/if} </th>
+    </tr>
+    <tr bgcolor="#999999">
+      <th >วิชา</th>
+      <th>เกรด</th>
+      <th>ผล</th>
+    </tr>
+    {foreach $row._reg_nocredit as $nocrd}
+    <tr>
+      <td>{$nocrd.course_id} {$nocrd.course_name} <strong>({$nocrd.credit} หน่วยกิต)</strong></td>
+      <td align="center">{$nocrd.result_grade}</td>
+      <td align="center"> {if $nocrd.result_grade eq "S"} <span style="color:green;"><strong>PASS</strong></span> {else} <span style="color:red;"><strong>FAIL</strong></span> {/if} </td>
+    </tr>
+    {foreachelse}
+    <tr>
+      <td colspan="3" align="center"><span style="font-size:11px;color:#FF0000;">ไม่พบข้อมูลลงทะเบียน</span></td>
+    </tr>
+    {/foreach}
+    <tr>
+      <th colspan="3" class="k-header" align="left"><span style="float:left;">รายละเอียดผลการสอบประเภทต่าง</span> {if !empty($row._exam_ce) && !empty($row._exam_fe) && !empty($row._exam_qe)} <span style="float:right;"> [ผล : {if !$res._exam_qe.result || !$res._exam_fe.result || !$res._exam_ce.result} <strong style="color:red;">FAIL</strong> {else} <strong style="color:green;">PASS</strong> {/if} ] </span> {else} <span style="float:right;"> [ผล : <strong style="color:red;">FAIL</strong> ]</span> {/if} </th>
+    </tr>
+    <tr bgcolor="#999999">
+      <th>ชื่อการทดสอบเกณฑ์</th>
+      <th>ผล</th>
+      <th>สอบเมื่อ</th>
+    </tr>
+    {if !empty($row._exam_ce) && !empty($row._exam_fe) && !empty($row._exam_qe)}
+    {foreach $row._exam_ce as $exam_ce}
+    <tr>
+      <td>{$exam_ce.exan_name}
+        ครั้งที่
+        {$exam_ce.ce_num}</td>
+      <td align="center">{$exam_ce.ce_result}</td>
+      <td align="center">{$exam_ce.ce_date}</td>
+    </tr>
+    {/foreach}
+    {foreach $row._exam_fe as $exam_fe}
+    <tr>
+      <td>{$exam_fe.exan_name}</td>
+      <td align="center">{$exam_fe.fe_result}</td>
+      <td align="center">{$exam_fe.fe_date}</td>
+    </tr>
+    {/foreach}
+    {foreach $row._exam_qe as $exam_qe}
+    <tr>
+      <td>{$exam_qe.exan_name}</td>
+      <td align="center">{$exam_qe.qe_result}</td>
+      <td align="center">{$exam_qe.qe_date}</td>
+    </tr>
+    {/foreach}
+    {else}
+    <tr>
+      <td colspan="3" align="center"><span style="font-size:11px;color:#FF0000;">ไม่พบข้อมูลลงทะเบียน</span></td>
+    </tr>
+    {/if}
+  </table>
+  </p>
+  {/if}
+  <div class="clear-all"></div>
+</div>
+</body></html>

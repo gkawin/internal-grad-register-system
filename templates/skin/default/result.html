@@ -1,0 +1,669 @@
+{include file = 'header.tpl.html'}
+<style>
+
+ul.token-input-list-facebook{
+	width:455px;
+}
+</style>
+<script>
+$(function(){
+	$(".treeView").each(function(index, element) {
+            $(".treeView").kendoTreeView({ dragAndDrop: false});
+        });
+		$(function(){
+			 $("#datePicker").kendoDatePicker({
+				format : "yyyy-MM-dd"
+			});
+		});
+});
+function other(method,value){
+	if(method==="exam_name"){
+		var state = $("#other_name").is(":disabled");
+		if(value==1){
+			$("#other_name").show().removeAttr("disabled");
+		}else{
+			if(!state){
+				$("#other_name").hide().attr("disabled","disabled");
+			}
+		}
+	}else if(method=="fe_resulted_form"){
+		var state = $("#fe_resulted_form").is(":disabled");
+		if(value==1){
+			$("#fe_resulted_form").show().removeAttr("disabled");
+		}else{
+			if(!state){
+				$("#fe_resulted_form").hide().attr("disabled","disabled");
+			}
+		}
+	}
+}
+</script> 
+
+<!-- CONTENT -->
+<div class="container">
+  {if $page.view eq "main"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > ตัวเลือกจัดการผลการศึกษา</div>
+  <p id="main">
+  <form method="post">
+    <p> กรุณาเลือกภาคการศึกษา
+      <select name="term_semester">
+        {foreach $row._semester as $item}
+        <option>
+        {$item.term}
+        /
+        {$item.years+543}
+        </option>
+        {/foreach}
+      </select>
+    </p>
+
+    <ul style="list-style:none;">
+      <li>
+        <button name="study_operaion" value="1" type="submit" class="k-button"><img src="/templates/skin/default/images/icon/results_icon.png" width="24" height="24" style="vertical-align:middle;"> จัดการผลการศึกษา</button>
+      </li>
+      <li >
+        <button name="exam_operaion" value="0" type="submit"  class="k-button"><img src="/templates/skin/default/images/icon/exam_icon.png" width="24" height="24" style="vertical-align:middle;"> จัดการผลการสอบ</button>
+      </li>
+    </ul>
+  </form>
+  </p>
+  <script>
+$(function(){
+	$("button").click(function(event){
+		var oTemp = $("form").serialize();
+		if($(this).val()==1){
+			$("form").attr('action','/edu/result/study');
+		}else{
+			$("form").attr('action','/edu/result/exam');
+		}
+	});
+});
+  
+  </script>
+  {elseif $page.view eq "study"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/result" style="text-decoration:underline;">ตัวเลือกจัดการผลการศึกษา ภาคเรียนที่
+    {$row.splitterm.0}
+    ปีการศึกษา
+    {$row.splitterm.1+543}
+  </a> > จัดการผลการศึกษา</div>
+  <p>
+  <h2 style="color:#0000FF;text-decoration:underline;">รายชื่อนักศึกษาที่ลงทะเบียนในภาคเรียน
+    {$row.splitterm.0}
+    ที่
+    
+    ปีการศึกษา
+{$row.splitterm.1+543}
+  </h2>
+  <table id="tblist" border="0" cellpadding="5" width="100%">
+    <thead class="k-header">
+      <tr>
+        <th width="77%">ชื่อ - สกุลนักศึกษา</th>
+        <th width="23%">หลักสูตร</th>
+      </tr>
+    </thead>
+    <tbody>
+      {foreach $row._termStd as $item}
+      <tr>
+        <td><ul class="treeView">
+            <li><span style="display:block;">
+              {$item.stdName}
+              </span> <span style="display:block;">
+              {$item.stdNameEN}
+              </span>
+              <ul>
+                <table width="100%" bgcolor="#FFFFFF">
+                  <thead class="k-header">
+                    <tr>
+                      <th colspan="6">รายวิชาที่ได้ลงทะเบียนในภาคการศึกษานี้</th>
+                    </tr>
+                  </thead>
+                  <tr bgcolor="#CCCCCC">
+                    <th width="53%">รายวิชา</th>
+                    <th width="15%">กลุ่ม</th>
+                    <th width="13%">หน่วยกิต</th>
+                    <th width="19%">เกรด</th>
+                  </tr>
+                  {foreach $row._enroll as $enroll}
+                  {if $item.Graduate_ID eq $enroll.Graduate_ID}
+                  
+                  <tr class="innerlist">
+                    <td>{$enroll.course_id}
+                      {$enroll.course_name}</td>
+                    <td align="center">{$enroll.section}</td>
+                    <td align="center">{$enroll.credit}</td>
+                    <td><select onChange="changeValue(this,'{$enroll.enroll_id}',null)">
+                    {foreach $row._chkresult as $result}
+                    {if $result.enroll_id eq $enroll.enroll_id}
+                    <option selected>{$result.result_grade}</option>
+                    {/if}
+                    {/foreach}
+                    <option disabled>กรุณาเลือก</option>
+                    <option>A</option>
+                    <option>B+</option>
+                    <option>B</option>
+                    <option>C+</option>
+                    <option>C</option>
+                    <option>D+</option>
+                    <option>D</option>
+                    <option>F</option>
+                    <option>I</option>
+                    <option>W</option>
+                    <option>OP</option>
+                    <option>S</option>
+                    <option>U</option>
+                   
+                   </select></td>
+                  </tr>
+                  
+                  {/if}
+                  
+                  {/foreach}
+                   {foreach $row._no_credit as $ncrd}
+                  {if $item.Graduate_ID eq $ncrd.Graduate_ID}
+                  <tr>
+                    <td colspan="4" class="k-header">รายวิชาไม่คิดหน่วยกิต</td>
+                  </tr>
+                  <tr>
+                    <td >{$ncrd.course_id} {$ncrd.course_name}</td>
+                    <td align="center">{$ncrd.section}</td>
+                    <td  align="center">{$ncrd.credit}</td>
+                    <td>
+                    <select onChange="changeValue(this,{$ncrd.id},'ncrd')">
+                    {foreach $row._storeGrade_ncrd as $grade}
+                    {if $grade eq $ncrd.result_grade}
+                    <option selected>{$grade}</option>
+                    {/if}
+                    <option>{$grade}</option>
+                    {/foreach}
+                   </select>
+                    </td>
+                    
+                  </tr>
+                  {/if}
+                  {/foreach}
+                  <tr>
+                    <td colspan="2" bgcolor="#CCCCCC">ลงทะเบียนทั้งหมด</td>
+                    <td align="center" bgcolor="#CCCCCC">{$row.total_credit.{$item.Graduate_ID}}</td>
+                    <td>&nbsp;</td>
+                  </tr>
+                </table>
+              </ul>
+            </li>
+          </ul></td>
+        <td valign="top">{$item.program_name}
+          สาขา
+          {$item.major_name}, {$item.program_suite}</td>
+      </tr>
+      {/foreach}
+    </tbody>
+  </table>
+  </p>
+  <script>
+  function changeValue(o,enroll_id,type){
+		if(!confirm("ยืนยันการเปลี่ยนแปลงข้อมูล")) return;
+		$("#raw_point").removeAttr("disabled");
+		var url = (type==null)? "/edu/result/study/gradeprocess" : "/edu/result/study/gradeprocess_n";
+		$.post(url,
+		{
+			"grade_val":o.value,
+			"enroll_id":enroll_id
+		},function(res){
+			if(res.result) alert("ทำรายการสำเร็จ")
+		},'json')
+	}
+	function changeValue_exam(method,value,id){
+		if(!confirm("ยืนยันการเปลี่ยนแปลงข้อมูล")) return;
+	}
+  </script>
+  {elseif $page.view eq "exam_landing"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/result" style="text-decoration:underline;">ตัวเลือกจัดการผลการศึกษา</a> > จัดการผลการสอบต่างๆ</div>
+  <p>
+<h2 style="color:#0000FF;text-decoration:underline;">รายชื่อนักศึกษาที่มีรายการสอบในภาคเรียนที่ 
+    {$row.splitterm.0}
+     ปีการศึกษา
+{$row.splitterm.1+543}
+  </h2>
+  <table id="tblist" border="0" cellpadding="5" width="100%">
+    <thead class="k-header">
+      <tr>
+        <th width="61%">ชื่อ - สกุลนักศึกษา</th>
+        <th width="16%">หลักสูตร</th>
+        <th width="23%">ดำเนินการ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {foreach $row._termStd as $item}
+      <tr>
+        <td><ul class="treeView">
+            <li><span style="display:block;">
+              {$item.stdName}
+              </span> <span style="display:block;">
+              {$item.stdNameEN}
+              </span>
+              <ul>
+                <table width="100%" bgcolor="#FFFFFF">
+                  <thead class="k-header">
+                    <tr>
+                      <th colspan="5">รายการสอบต่างๆ</th>
+                    </tr>
+                  </thead>
+                  
+
+                  <tr bgcolor="#CCCCCC">
+                    <th>ชื่อรายการสอบ</th>
+                    <th>สอบครั้งที่</th>
+                    <th>สถานะ</th>
+                    
+                    <th>ผลการสอบ</th>
+                    <th>ดำเนินการ</th>
+                  </tr>
+                  {foreach $row._exam_ce as $exam_ce}
+                  {if $exam_ce.Graduate_ID eq $item.Graduate_ID}
+                  <tr>
+                    <td width="65%">{$exam_ce.exan_name}</td>
+                    <td width="16%" align="center">{$exam_ce.ce_num}</td>
+                    <td width="19%" align="center">{$exam_ce.status1}</td>
+                    
+                    <td width="19%" align="center">
+                    {$exam_ce.ce_result}
+                    </td>
+                    <td width="19%" align="left">
+                    <ul class="ulmenu">
+                    <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:baseline;"><a href="/edu/result/exam/ceedit?ceid={$exam_ce.ce_id}&gradexamid={$exam_ce.grad_exam_id}&gradid={$item.Graduate_ID}&gradname={$item.stdName}" target="_blank" >แก้ไข</a></li>
+                    </ul>
+                    </td>
+                  </tr>
+                  {/if}
+                  {/foreach}
+                  {foreach $row._exam_fe as $exam_fe}
+                  {if $exam_fe.Graduate_ID eq $item.Graduate_ID}
+                  <tr>
+                    <td width="65%">{$exam_fe.exan_name}</td>
+                    <td width="16%" align="center">{$exam_fe.fe_num}</td>
+                    <td width="19%" align="center">{$exam_fe.status1}</td>
+                    
+                    <td width="19%" align="center">
+                    {$exam_fe.fe_result}
+                    </td>
+                    <td width="19%" align="center"> <ul class="ulmenu">
+                    <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:baseline;"><a href="/edu/result/exam/feedit?feid={$exam_fe.fe_id}&gradexamid={$exam_fe.grad_exam_id}&gradid={$item.Graduate_ID}&gradname={$item.stdName}" target="_blank" >แก้ไข</a></li>
+                    </ul></td>
+                  </tr>
+                  {/if}
+                  {/foreach}
+                  {foreach $row._exam_qe as $exam_qe}
+                  {if $exam_qe.Graduate_ID eq $item.Graduate_ID}
+                  <tr>
+                    <td width="65%">{$exam_qe.exan_name}</td>
+                    <td width="16%" align="center">{$exam_qe.qe_num}</td>
+                    <td width="19%" align="center">{$exam_qe.status1}</td>
+                    
+                    <td width="19%" align="center">
+                     {$exam_qe.qe_result}
+                    </td>
+                    <td width="19%" align="center"> <ul class="ulmenu">
+                    <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:baseline;"><a href="/edu/result/exam/qeedit?qeid={$exam_qe.qe_id}&gradexamid={$exam_qe.grad_exam_id}&gradid={$item.Graduate_ID}&gradname={$item.stdName}" target="_blank" >แก้ไข</a></li>
+                    </ul></td>
+                  </tr>
+                  {/if}
+                  {/foreach}
+                </table>
+              </ul>
+            </li>
+          </ul></td>
+        <td valign="top">{$item.program_name}
+          ,
+          {$item.program_suite}</td>
+        <td valign="top">
+        <ul class="ulmenu">
+        	<li><img src="/templates/skin/HTML5 Admin Template/images/icn_new_article.png" style="vertical-align:middle;"> <a href="/edu/result/exam/cenew?termid={$item.id}&term={$row.splitterm.0}&years={$row.splitterm.1}&gradid={$item.Graduate_ID}&gradname={$item.stdName}" target="_blank" >เพิ่มผลการสอบประมวลความรู้</a></li>
+            <li>
+            <img src="/templates/skin/HTML5 Admin Template/images/icn_new_article.png" style="vertical-align:middle;"> <a href="/edu/result/exam/fenew?termid={$item.id}term={$row.splitterm.0}&years={$row.splitterm.1}&gradid={$item.Graduate_ID}&gradname={$item.stdName}" target="_blank" >เพิ่มผลการสอบภาษาต่างประเทศ</a>
+            </li>
+            {if $item.degree_level_name eq "ปริญญาเอก"}
+            <li>
+            <img src="/templates/skin/HTML5 Admin Template/images/icn_new_article.png" style="vertical-align:middle;"> <a href="/edu/result/exam/qenew?termid={$item.id}&term={$row.splitterm.0}&years={$row.splitterm.1}&gradid={$item.Graduate_ID}&gradname={$item.stdName}" target="_blank" >เพิ่มผลการสอบวัดคุณสมบัติ</a>
+            </li>
+            {/if}
+        </ul>
+        </td>
+      </tr>
+      {/foreach}
+    </tbody>
+  </table>
+  </p>
+  {elseif $page.view eq "exam_ce"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/result" style="text-decoration:underline;">ตัวเลือกจัดการผลการศึกษา</a> > <a href="#" onClick="history.go(-1)" style="text-decoration:underline;">จัดการผลการสอบต่างๆ</a> &gt; บันทึกรายการสอบ ผลการสอบประมวลความรู้</div>
+  <p id="exam_ce">
+  {if !empty($res.callback)}
+  <p id="landing">{$res.callback.result}<br>ปิดหน้าต่างนี้ <a href="#"  onClick=" window.close()">คลิ๊กที่นี้</a></p>
+  {/if}
+  
+  <h2>ใบบันทึกรายการสอบ ผลการสอบประมวลความรู้</h2>
+
+  <form method="post" action="">
+<input type="hidden" name="ce_id" value="{$page._get.ceid}">
+ <input type="hidden" name="grad_exam_id" value="{$page._get.gradexamid}">	<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF">
+          <tr>
+            <td>ชื่อผู้บันทึก :</td>
+            <td colspan="3" >{$page.user.nameTH}</td>
+          </tr>
+      <tr>
+            <td width="14%">ชื่อผู้สอบ :</td>
+            <td colspan="3" >{$page._get.gradid}: {$page._get.gradname}</td>
+          </tr>
+          <tr>
+            <td>รายการสอบ :</td>
+            <td width="33%" ><input type="text" name="exam_name" readonly value="สอบประมวลความรู้" class="k-textbox"></td>
+            <td width="11%">ครั้งที่ :</td>
+            <td width="42%"><input name="ce_num" type="text" required class="k-textbox" value="{if !empty($res.ce_count)}{$res.ce_count}{else}{$row._exam_ce.ce_num}{/if}"  size="6" readonly></td>
+          </tr>
+          <tr>
+            <td>สอบวันที่ :</td>
+            <td><input name="ce_date" type="text" id="datePicker" required value="{$row._exam_ce.ce_date}"></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>ผลการสอบ :</td>
+            <td><select name="ce_result">
+             {if $row._exam_ce.ce_result eq "U"}
+                    <option >S</option>
+                    <option selected>U</option>
+                    <option>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_ce.ce_result eq "S"}
+                    <option selected>S</option>
+                    <option >U</option>
+                    <option>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_ce.ce_result eq "OP"}
+                    <option >S</option>
+                    <option >U</option>
+                    <option selected>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_ce.ce_result eq "I"}
+                     <option >S</option>
+                    <option >U</option>
+                    <option >OP</option>
+                    <option selected>I</option>
+                    {else}
+                    <option selected>S</option>
+                    <option >U</option>
+                    <option >OP</option>
+                    <option >I</option>
+                    {/if}
+            </select></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <th colspan="4" class="k-header">ผลคะแนนสอบตามประเภทต่างๆ</th>
+          </tr>
+          <tr>
+            <td>สอบข้อเขียน :</td>
+            <td><input name="ce_result_writing" type="text" required class="k-textbox" size="6" maxlength="3" value="{$row._exam_ce.ce_result_writing}" onKeyUp="checkDex(this)"></td>
+            <td>สอบปากเปล่า :</td>
+            <td><input name="ce_result_oral" type="text" required class="k-textbox" size="6" maxlength="3" value="{$row._exam_ce.ce_result_oral}" onKeyUp="checkDex(this)"></td>
+          </tr>
+          <tr>
+            <td>สอบปฎิบัติ :</td>
+            <td><input name="ce_result_lab" type="text" required class="k-textbox" size="6" maxlength="3" value="{$row._exam_ce.ce_result_lab}" onKeyUp="checkDex(this)"></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>สถานะการสอบ :</td>
+            <td><select name="status">
+            {if $row._exam_ce.status == 1}
+              <option value="1" selected>สอบแล้ว</option>
+              <option value="0">ยังไม่ได้สอบ</option>
+              <option value="2">ไม่ชำระเงิน</option>
+            {elseif $row._exam_ce.status == 0}
+            	<option value="1" >สอบแล้ว</option>
+              <option value="0" selected>ยังไม่ได้สอบ</option>
+              <option value="2">ไม่ชำระเงิน</option>
+            {else}
+            <option value="1">สอบแล้ว</option>
+              <option value="0">ยังไม่ได้สอบ</option>
+              <option value="2" >ไม่ชำระเงิน</option>
+            {/if}
+            </select></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <th colspan="4"><input name="operation" type="submit" value="บันทึกข้อมูล" onClick="return comfirm('ยืนยังการบันทึก')" required></th>
+          </tr>
+        </table>
+  </form>
+    </p>
+ 
+  {elseif $page.view eq "exam_fe"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/result" style="text-decoration:underline;">ตัวเลือกจัดการผลการศึกษา</a> > <a href="#" onClick="history.go(-1) "style="text-decoration:underline;">จัดการผลการสอบต่างๆ</a> &gt; บันทึกรายการสอบ ผลการภาษาต่างประเทศ</div>
+  <p id="exam_fe">
+  {if !empty($res.callback)}
+  <p id="landing">{$res.callback.result}<br>ปิดหน้าต่างนี้ <a href="#"  onClick=" window.close()">คลิ๊กที่นี้</a></p>
+  {/if}
+  <h2>ใบบันทึกรายการสอบ ผลการภาษาต่างประเทศ</h2>
+  <form method="post" action="">
+<input type="hidden" name="fe_id" value="{$page._get.feid}">
+  <input type="hidden" name="grad_exam_id" value="{$page._get.gradexamid}">
+    	<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF">
+          <tr>
+            <td>ชื่อผู้บันทึก :</td>
+            <td colspan="3" >{$page.user.nameTH}</td>
+          </tr>
+          <tr>
+            <td width="14%">ชื่อผู้สอบ</td>
+            <td colspan="3" >{$page._get.gradid}: {$page._get.gradname}</td>
+          </tr>
+          <tr>
+            <td>รายการสอบ :</td>
+            <td width="33%" >
+            
+            <select name="exam_name" onChange="other('exam_name',this.value)">
+            {if $row._exam_fe.exan_name  == "สอบ TOEIC"}
+            <option selected>สอบ TOEIC</option>
+            <option>สอบ TOFEL</option>
+            <option value="1">อื่นๆ โปรดระบุ</option>
+            {elseif $row._exam_fe.exan_name  == "สอบ TOFEL"}
+            <option >สอบ TOEIC</option>
+            <option selected>สอบ TOFEL</option>
+            <option value="1">อื่นๆ โปรดระบุ</option>
+            {else}
+            <option >สอบ TOEIC</option>
+            <option >สอบ TOFEL</option>
+            <option value="1"  >อื่นๆ โปรดระบุ</option>
+            {/if}
+            </select>
+            <input type="text" id="other_name"  name="exam_name" {if $row._exam_fe.exan_name eq 'สอบ TOEIC' || $row._exan_fe.exam_name eq 'สอบ TOFEL'}disabled{/if} style="display:{if $row._exam_fe.exan_name eq 'สอบ TOEIC' || $row._exan_fe.exam_name eq 'สอบ TOFEL'}none{/if};" value="{$row._exam_fe.exan_name}" class="k-textbox" ></td>
+            <td width="11%">ครั้งที่ :</td>
+            <td width="42%"><input name="fe_num" type="text" required class="k-textbox" value="{if !empty($res.fe_count)}{$res.fe_count}{else}{$row._exam_fe.fe_num}{/if}" size="6" readonly></td>
+          </tr>
+          <tr>
+            <td>สอบวันที่ :</td>
+            <td><input name="fe_date" type="text" id="datePicker" required value="{$row._exam_fe.fe_date}"></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>ผลการสอบ :</td>
+            <td><select name="fe_result">
+            {if $row._exam_fe.fe_result eq "U"}
+                    <option >S</option>
+                    <option selected>U</option>
+                    <option>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_fe.fe_result eq "S"}
+                    <option selected>S</option>
+                    <option >U</option>
+                    <option>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_fe.fe_result eq "OP"}
+                    <option >S</option>
+                    <option >U</option>
+                    <option selected>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_fe.fe_result eq "I"}
+                     <option >S</option>
+                    <option >U</option>
+                    <option >OP</option>
+                    <option selected>I</option>
+                    {else}
+                    <option selected>S</option>
+                    <option >U</option>
+                    <option >OP</option>
+                    <option >I</option>
+                    {/if}
+            </select>
+            </td>
+            <td>คะแนนดิบ :</td>
+            <td><input name="fe_raw_result" type="text" maxlength="3" size="6" class="k-textbox" required value="{$row._exam_fe.fe_raw_result}" onKeyUp="checkDex(this)"></td>
+          </tr>
+          <tr>
+            <td>สถานที่สอบ :</td>
+            <td><select name="fe_resulted_form" onChange="other('fe_resulted_form',this.value)">
+            {if $row._exam_fe.fe_resulted_form eq "จัดสอบภายในมหาวิทยาลัย" }
+              <option selected>จัดสอบภายในมหาวิทยาลัย</option>
+              <option value="1">สถานที่สอบอื่นๆ โปรดระบุ</option>
+            {else}
+            	<option >จัดสอบภายในมหาวิทยาลัย</option>
+              <option value="1" selected>สถานที่สอบอื่นๆ โปรดระบุ</option>
+            {/if}
+            </select>
+              <br>
+            <input type="text" name="fe_resulted_form" class="k-textbox" {if $row._exam_fe.fe_resulted_form eq 'จัดสอบภายในมหาวิทยาลัย'} disabled {/if} value="{$row._exam_fe.fe_resulted_form}"  style="display:{if $row._exam_fe.fe_resulted_form eq 'จัดสอบภายในมหาวิทยาลัย'}none;{else}{/if}" id="fe_resulted_form"></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>สถานะการสอบ :</td>
+            <td><select name="status">
+              {if $row._exam_fe.status == 1}
+              <option value="1" selected>สอบแล้ว</option>
+              <option value="0">ยังไม่ได้สอบ</option>
+              <option value="2">ไม่ชำระเงิน</option>
+            {elseif $row._exam_fe.status == 0}
+            	<option value="1" >สอบแล้ว</option>
+              <option value="0" selected>ยังไม่ได้สอบ</option>
+              <option value="2">ไม่ชำระเงิน</option>
+            {else}
+            <option value="1">สอบแล้ว</option>
+              <option value="0">ยังไม่ได้สอบ</option>
+              <option value="2" selected>ไม่ชำระเงิน</option>
+            {/if}
+            </select></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <th colspan="4"><input name="operation" type="submit" value="บันทึกข้อมูล" required></th>
+          </tr>
+        </table>
+  </form>
+    </p>
+  {elseif $page.view eq "exam_qe"}
+  	<div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/result" style="text-decoration:underline;">ตัวเลือกจัดการผลการศึกษา</a> > <a href="#" onClick="history.go(-1)" style="text-decoration:underline;">จัดการผลการสอบต่างๆ</a> &gt; บันทึกรายการสอบ ผลการสอบวัดคุณสมบัติ</div>
+  <p id="exam_qe">
+  {if !empty($res.callback)}
+  <p id="landing">{$res.callback.result}<br>ปิดหน้าต่างนี้ <a href="#"  onClick=" window.close()">คลิ๊กที่นี้</a></p>
+  {/if}
+  <h2>ใบบันทึกรายการสอบ ผลการสอบวัดคุณสมบัติ (เฉพาะนักศึกษาปริญญาเอก)</h2>
+  <form method="post" action="">
+<input type="hidden" name="qe_id" value="{$page._get.qeid}">
+  <input type="hidden" name="grad_exam_id" value="{$page._get.gradexamid}">
+    	<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF">
+          <tr>
+            <td>ชื่อผู้บันทึก :</td>
+            <td colspan="3" >{$page.user.nameTH}</td>
+          </tr>
+          <tr>
+            <td width="17%">ชื่อผู้สอบ</td>
+            <td colspan="3" >{$page._get.gradid}: {$page._get.gradname}</td>
+          </tr>
+          <tr>
+            <td>รายการสอบ :</td>
+            <td width="32%" ><input type="text" readonly value="สอบวัดคุณสมบัติ" class="k-textbox" name="exam_name"></td>
+            <td width="14%">ครั้งที่ :</td>
+            <td width="37%"><input name="qe_num" type="text" required class="k-textbox" value="{if !empty($res.qe_count)}{$res.qe_count}{else}{$row._exam_qe.qe_num}{/if}" size="6"></td>
+          </tr>
+          <tr>
+            <td>สอบวันที่ :</td>
+            <td><input name="qe_date" type="text" id="datePicker" required value="{$row._exam_qe.qe_date}"></td>
+            <td>รายนามคณะกรรมการ :</td>
+            <td><textarea name="qe_committee_list" cols="40" rows="3" required class="k-textbox">{$row._exam_qe.qe_committee_list}</textarea></td>
+          </tr>
+          <tr>
+            <td>ผลการสอบ :</td>
+            <td><select name="qe_result">
+              {if $row._exam_qe.qe_result eq "U"}
+                    <option >S</option>
+                    <option selected>U</option>
+                    <option>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_qe.qe_result eq "S"}
+                    <option selected>S</option>
+                    <option >U</option>
+                    <option>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_qe.qe_result eq "OP"}
+                    <option >S</option>
+                    <option >U</option>
+                    <option selected>OP</option>
+                    <option>I</option>
+                    {elseif  $row._exam_qe.qe_result eq "I"}
+                     <option >S</option>
+                    <option >U</option>
+                    <option >OP</option>
+                    <option selected>I</option>
+                    {else}
+                    <option selected>S</option>
+                    <option >U</option>
+                    <option >OP</option>
+                    <option >I</option>
+                    {/if}
+            </select></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <th colspan="4" class="k-header">ผลคะแนนสอบตามประเภทต่างๆ</th>
+          </tr>
+          <tr>
+            <td>สอบข้อเขียน :</td>
+            <td><input name="qe_result_writing" type="text" required class="k-textbox" size="6" maxlength="3" value="{$row._exam_qe.qe_result_writing}" onKeyUp="checkDex(this)"></td>
+            <td>สอบปากเปล่า :</td>
+            <td><input name="qe_result_oral" type="text" required class="k-textbox" size="6" maxlength="3" value="{$row._exam_qe.qe_result_oral}" onKeyUp="checkDex(this)"></td>
+          </tr>
+          <tr>
+            <td>สถานะการสอบ :</td>
+            <td><select name="status">
+              {if $row._exam_qe.status == 1}
+              <option value="1" selected>สอบแล้ว</option>
+              <option value="0">ยังไม่ได้สอบ</option>
+              <option value="2">ไม่ชำระเงิน</option>
+            {elseif $row._exam_qe.status == 0}
+            	<option value="1" >สอบแล้ว</option>
+              <option value="0" selected>ยังไม่ได้สอบ</option>
+              <option value="2">ไม่ชำระเงิน</option>
+            {else}
+            <option value="1">สอบแล้ว</option>
+              <option value="0">ยังไม่ได้สอบ</option>
+              <option value="2" >ไม่ชำระเงิน</option>
+            {/if}
+            </select></td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <th colspan="4"><input name="operation" type="submit" value="บันทึกข้อมูล" required></th>
+          </tr>
+        </table>
+  </form>
+    </p>
+  {/if}
+  <div class="clear-all"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,191 @@
+{include file = 'header.tpl.html'}
+<style>
+
+ul.token-input-list-facebook{
+	width:455px;
+}
+</style>
+<script>
+$(function(){
+	$(".rdel").click(function(){
+		if(!confirm("คุณต้องการลบข้อมูลหรือไม่")) return;
+		$this = $(this);
+		$this.addClass("loading");
+		$.post("/edu/coursetype",{ "del_id":$this.attr("rel"),"name":$this.attr("data-rel")},function(data){
+			if(data.result){
+					$this.parents("tr").fadeOut("fast", function(){
+						$this.parents("tr").remove();
+					});
+					$this.removeClass("loading");
+			}else{
+				alert("ไม่สามารถลบได้ เนื่องจาก\n- มีรายวิชาค้างอยู่ในกลุ่มประเภทวิชา\nกรุณาแก้ไข");
+				$this.removeClass("loading");
+			}
+		},'json');
+		return(false);
+	});
+	
+});
+	function checkEngChar(elm) {
+		var filter = /^[a-zA-Z\d!@#$%\^\&\*\(\)\-\+~\[\]{}\\|;:'"\M<>\?\/,\.\s=_]*$/;
+		if(!filter.test(elm.value)) {
+			alert('Sorry, only english charactors are allowed here.');
+			elm.value = '';
+			elm.focus();
+		}
+	}
+	
+	function chkValue(value){
+		if(value.length >=6){
+			$("#status_bar").html('<img src="../../../common/images/icons/loading.gif" align="absmiddle">&nbsp;Checking availability...');
+			 $.ajax({  
+    		type: "POST",  
+			url: "/edu/coursetype",  
+			data: "chkAvaliable="+ value,  
+			success: 
+				function(msg){
+			 		$("#status_bar").ajaxComplete(function(event, request, settings){ 
+					if(msg == 'OK'){ 
+						$(this).html('&nbsp;<img src="../../../common/images/icons/accepted.png" align="absmiddle"> <font color="Green"> Available </font>');
+						return true;
+					}else{  
+						$(this).html(msg);
+						return false;
+					}   
+				});
+				}
+			});
+		}else{
+			$("#status_bar").html('<font color="red">กรุณากรอกให้มากกว่า <strong>6</strong> ตัวอักษร</font>');
+			return false;
+		}
+	}
+</script> 
+<!-- CONTENT -->
+<div class="container">
+    {if $page.view eq "list"}
+     <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > จัดการประเภทวิชา</div>
+    <section>
+      <ul style="padding:0;">
+          <li class="k-button"><a href="/edu/coursetype/form"   class="add_new_icon ex1" >เพิ่มประเภทการศึกษาใหม่</a></li>
+        </ul>
+
+      <table  width="100%" cellpadding="3" id="tblist">
+        <thead  style="text-decoration:underline; font-weight:bold;" class="k-header">
+          <tr>
+            <td width="327" style="text-align: left">ชื่อประเภทวิชา</td>
+            <td width="329" style="text-align: left">Course Type Name</td>
+            <td width="195" align="center" style="text-align: left">สถานะ</td>
+            <td width="195" align="center" style="text-align: left">ดำเนินการ</td>
+          </tr>
+        </thead>
+        <tbody>
+          {foreach $page.all as $row}
+          <tr class="rowhl" valign="top">
+            <td>{$row.course_type_nameTH}</td>
+            <td>{$row.course_type_nameEN}</td>
+            <td align="center">{$row.status1}</td>
+            <td ><ul class="ulmenu">
+              <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"> <a href="/edu/coursetype/form?editid={$row.id}">แก้ไขประเภทวิชา</a></li>
+               <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"> <a href="#" class="rdel" rel="{$row.id}" data-rel="{$row.course_type_nameTH}">ลบประเภทวิชา</a></li>
+               </ul></td>
+          </tr>
+          {/foreach}
+        </tbody>
+      </table>
+    </section>
+    {elseif $page.view eq "form"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/coursetype" style="text-decoration:underline;">จัดการประเภทวิชา</a> > {if empty($row)}เพิ่มประเภทวิชาใหม่{else}แก้ไขประเภทวิชา{/if}</div>
+    {if !empty($res.callback.result)}
+    <p id="landing">
+      {$res.callback.result}<br>หากต้องการกำหนดรายวิชาต่างๆ กรุณา <a href="/edu/course">คลิ๊กที่นี้</a></p>
+
+    {/if}
+    <div>
+    <form id="addnew" method="post" action="">
+      <fieldset>
+        <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF">
+        <thead  class="k-header">
+          <tr>
+            <th colspan="2" scope="col">แบบฟอร์มบันทึก และแก้ไขประเภทรายวิชา
+            </th>
+          </tr>
+          </thead>
+          <tbody>
+
+          <tr>
+            <td>{if empty($row)}ชื่อผู้บันทึก{else}ชื่อผู้แก้ไข{/if} :</td>
+            <td>{$page.user.nameTH}</td>
+          </tr>
+          <tr>
+            <td width="20%">ชื่อประเภทวิชา :</td>
+            <td width="80%"><input name="course_type_nameTH" value="{$row.course_type_nameTH}" size="70" maxlength="255" onkeyup="chkValue(this.value),checkThai(this)" style="float:left;" required class="k-textbox"><div id="status_bar" style="position:relative; float:left; padding:3px;"></div></td>
+            </tr>
+          <tr >
+            <td>Course Type Name :</td>
+            <td><input name="course_type_nameEN" required value="{$row.course_type_nameEN}" size="70" maxlength="255" onKeyUp="checkEngChar(this)" class="k-textbox"></td>
+          </tr>
+          <tr >
+            <td>ลักษณะวิชา :</td>
+            <td><select name="required_type">
+            {if !empty($row.required_type)}
+            {switch $row.required_type}
+            {case 1 break}
+            <option value="1" selected>วิชาบังคับ</option>
+            {case 2 break}
+            <option value="2" selected>วิชาเลือก</option>
+            {case 3 break}
+            <option value="3" selected>วิชาเสรี</option>
+            {case 4 break}
+            <option value="4" selected>วิทยานิพนธ์ / ดุษฎีนิพนธ์</option>
+            {/switch}
+            {else}
+            <option value="1" selected>วิชาบังคับ</option>
+            <option value="2">วิชาเลือก</option>
+            <option value="3">วิชาเสรี</option>
+            <option value="4">วิทยานิพนธ์ / ดุษฎีนิพนธ์</option>
+            {/if}
+            </select></td>
+          </tr>
+          <tr >
+            <td>สถานะ :</td>
+            <td>
+              <select name="status">
+                {if !empty($row.status)}
+                {if $row.status == 1}
+                <option value="1" selected>เปิดใช้งาน</option>
+                <option value="0">ยกเลิกการใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {elseif $row.status == 2}
+                <option value="2" selected>รอการอนุมัติ</option>
+                <option value="0" >ยกเลิกการใช้งาน</option>
+                <option value="1">เปิดใช้งาน</option>
+                {else}
+                <option value="0" selected>ยกเลิกการใช้งาน</option>
+                <option value="1">เปิดใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {/if}
+                {else}
+                <option value="2">รอการอนุมัติ</option>
+                <option value="1" selected>เปิดใช้งาน</option>
+                <option value="0">ยกเลิกการใช้งาน</option>
+                
+                {/if}
+                </select>
+              </td>
+          </tr>
+          <tr>
+          	<td colspan="2" align="center"><input type="submit" name="operation" value="{if empty($row)}เพิ่มข้อมูล{else}แก้ไขข้อมูล{/if}"onClick="return confirm('ยืนยันข้อมูล')"></td>
+          </tr>
+          </tbody>
+        </table>
+        </fieldset>
+      </form>
+    </div>
+    {/if}
+    <div class="clear-all"></div>
+  </div>
+</div>
+
+</body>
+</html>

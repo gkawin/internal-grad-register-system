@@ -1,0 +1,47 @@
+{if $page.view eq ""}
+
+ <article class="module width_full">
+    <header>
+      <h3>จัดการระบบรักษาความปลอดภัย</h3>
+    </header>
+    <div class="module_content" style="position:relative;">
+   	<div style="margin-left:4.7em; position:relative;">
+  <a href="/system/secure/changepassword" class="k-button "  style="display:block; margin:5pt; width:20%; float:left;color:#000;"><img src="/templates/skin/HTML5 Admin Template/images/icn_edit_article.png" style="vertical-align:middle;"> เปลี่ยนรหัสผ่าน</a>
+   <div class="clear"></div>
+    </div>
+    </div>
+  </article>
+  
+{elseif $page.view eq "changepassword"}
+<article class="module width_full">
+  <header>
+    <h3>เปลี่ยนรหัสผ่านผู้ดูแลระบบ</h3>
+  </header>
+  <div class="module_content">
+  <div id="result" style="display:none; background:#00FF33; padding:10px;" align="center"></div>
+  <form method="post" action="" id="newAccount">
+    <table width="100%" border="0" align="center" cellpadding="5" cellspacing="0">
+
+      <tr>
+     
+        <td><fieldset>
+            <label>รหัสผ่านเดิม</label>
+            <input type="password" name="oldPwd" id="oldPwd" maxlength="12" class="k-textbox" required>
+            
+          </fieldset></td>
+      </tr>
+      <tr>
+        <td><fieldset>
+            <label>รหัสผ่านใหม่</label>
+            <input name="pwd" size="15" maxlength="12" type="text" required validationMessage="กรุณากรอกรหัสผ่าน" class="k-textbox" id="sPwd" style="float:left;" onKeyUp="checkEngChar(this)"><input type="button" id="generatePwd" style="margin-left:7pt;" value="Generate password">
+            </fieldset></td>
+      </tr>
+      <tr>
+        <td align="center"><input id="opration" type="submit" name="opration" value="ยืนยันการเปลี่ยนรหัสผ่าน" {if empty($row._emp)} disabled {/if}></td>
+      </tr>
+    </table>
+    </form>
+    <div class="clear"></div>
+  </div>
+</article>
+{/if}

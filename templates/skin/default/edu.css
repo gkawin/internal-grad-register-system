@@ -1,0 +1,21 @@
+/*===== template : default, file : edu.html, css control : edu.html*/
+.recent{
+	background:#FFFFFF;
+	display:block;
+	width:100%;
+	border:#000 1px solid;
+	float:left;
+}
+/* override class k-button */
+.k-button {
+	margin:5px;
+	padding:5px;
+	
+}
+ul{ 
+	padding:0;
+}
+li{
+	width:217px;
+
+}

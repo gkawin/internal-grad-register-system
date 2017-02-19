@@ -1,0 +1,607 @@
+{include file = 'header.tpl.html'}
+<style>
+.toolbar ul {
+	list-style:none;padding:0;
+}
+.toolbar li{ display:inline;}
+ul.token-input-list-facebook{
+	width:455px;
+}
+</style>
+<script>
+$(function(){
+	$(".delCourse").click(function(){
+		if(confirm("คุณต้องการลบข้อมูลรายวิชาทั้งหมดหรือไม่")){
+			/*check Course*/
+			var courseid = $(this).attr("rel");
+			$this = $(this);
+			$.post('/edu/course',{ "deltype":"{{'chkpil'|md5}|sha1}","courseid":courseid},function(data){
+				if(data.result){
+					if(confirm("โปรดระวัง มีกลุ่มเรียนบรรจุอยู่ในหลักสูตร คุณต้องการลบข้อมูลรายวิชและข้อมูลกลุ่มเรียนทั้งหมดหรือไม่")){
+						$.post('/edu/course',{ "deltype":"{{'confirmdel'|md5}|sha1}","courseid":courseid},function(data){
+							if(data.result){
+								$this.parents("tr").fadeOut("fast", function(){
+								$this.parents("tr").remove();
+								});
+							}
+						},'json')
+					}else{
+						return false;
+					}
+				}else{
+					$.post('/edu/course',{ "deltype":"{{'confirmdel'|md5}|sha1}","courseid":courseid},function(data){
+						if(data.result){
+							$this.parents("tr").fadeOut("fast", function(){
+							$this.parents("tr").remove();
+							});
+						}
+						},'json')
+				}
+			},'json')
+		}
+	});	
+
+	$(".delSection").click(function(event){
+		var sBin = $(this).attr("rel");
+		$this = $(this);
+		
+		if(!confirm("คุณต้องการลบกลุ่มเรียนหรือไม่"))return;
+			$.post("/edu/course",{ "deltype":"{{'secdel'|md5}|sha1}","section_id":sBin,"section":$this.attr("data-id"),"course_id":$this.attr("data-rel")},
+			function(data){
+				if(data.result){
+					$this.parents("tr.innersection").fadeOut('slow',
+					function(){
+						$this.parents("tr.innersection").remove();
+					});
+				}
+			},"json");
+	});
+});
+
+	function callPrefixCourse(value){
+		$.post("/edu/course",{ "callprefix":1,"data":value},
+		function(data){
+			$("#course_id_prefix").attr("value",data.prefix_name).removeAttr("disabled");
+			$("#course_id_prefixEN").attr("value",data.prefix_nameEN).removeAttr("disabled");
+			
+		},'json');
+	}	
+	function copyValueChk(o){
+		document.getElementById('course_id_postfixEN').value = o.value;
+		var filter = /^[0-9]*$/;
+		if(!filter.test(o.value)) {
+			alert('ขออภัย กรุณาป้อนตัวเลขเท่านั้น');
+			o.value = '';
+			o.focus();
+			return false;
+		}else{
+			if(o.value.length == 3){
+				var sBin = $('#course_id_prefix').val()+o.value
+				$("#status_bar").html('<img src="../../../common/images/icons/loading.gif" align="absmiddle">&nbsp;Checking availability...');
+				$.ajax({  
+				type: "POST",  
+				url: "/edu/course",  
+				data: "chkAvaliable="+ sBin,  
+				success: 
+					function(msg){
+							$("#status_bar").ajaxComplete(function(event, request, settings){ 
+							if(msg == 'OK'){ 
+								$(this).html('&nbsp;<img src="../../../common/images/icons/accepted.png" align="absmiddle"> <font color="Green"> Available </font>');
+								return true;
+							}else{  
+								$(this).html(msg);
+								return false;
+							}   
+						});
+					}
+				});
+			}
+		}
+	}
+</script> 
+<script>
+$(function(){
+	function a(){
+		var pre = '{$page.courseBefore}';
+		if(pre=='')
+			return  null;
+		else
+			var json = eval('('+pre+')');
+			return json;
+	}
+	$("input[name=course_before]").tokenInput("/service/callbackJson?module=course", 
+		{ 	theme: "facebook",
+			preventDuplicates: true,
+          	propertyToSearch: "id",
+			prePopulate: a(),
+			resultsFormatter: 
+				function(item){ 
+				return "<li><div style='display: inline-block;'><div class='course_name'>" + item.id + " : " + item.course_name + "</div><div class='course_nameEN'>" + item.course_idEN + " : " + item.course_nameEN + "</div></div></li>" 
+				}
+		});
+	
+	
+	 function startChange() {
+        var startDate = start.value();
+
+                        if (startDate) {
+                            startDate = new Date(startDate);
+                            startDate.setDate(startDate.getDate() + 1);
+                            end.min(startDate);
+                        }
+                    }
+
+                    function endChange() {
+                        var endDate = end.value();
+
+                        if (endDate) {
+                            endDate = new Date(endDate);
+                            endDate.setDate(endDate.getDate() - 1);
+                            start.max(endDate);
+                        }
+                    }
+
+                    var start = $("input[name=date_midterm]").kendoDatePicker({
+                        change: startChange,
+						format: "yyyy-MM-dd"
+                    }).data("kendoDatePicker");
+
+                    var end = $("input[name=date_final]").kendoDatePicker({
+                        change: endChange,
+						format: "yyyy-MM-dd"
+                    }).data("kendoDatePicker");
+
+                   // start.max(end.value());
+                    //end.min(start.value());
+
+	
+});
+	
+</script> 
+<!-- CONTENT -->
+<div class="container">
+  {if $page.view eq "list"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > จัดการวิชา</div>
+  <section>
+    <ul style="padding:0;">
+      <li class="k-button"><a href="/edu/course/form/new" class="add_new_icon ex1">เพิ่มวิชาเรียนใหม่</a></li>
+      <!--<li><a href="/edu/course/sectionduty" id="ldel" class="k-button">ภาระการเรียนการสอน</a></li>-->
+    </ul>
+    <table  width="100%" cellpadding="3" class="tblists" id="tblist">
+      <thead class="k-header">
+        <tr>
+          <th width="67%"  style="text-align: left">ชื่อวิชา</th>
+          <th width="16%"  style="text-align: center">ชั่วโมง<br>
+            (บรรยาย - ปฎิบัติ)</th>
+          <th width="6%"  style="text-align: center">หน่วยกิต</th>
+          <th width="11%"  style="text-align: center">ดำเนินการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {foreach $page.all as $row}
+        <tr class="rowhl" valign="top">
+          <td style="text-align: left"><ul class="treeView">
+              <li><span style="display:block;">
+                {$row.course_id}
+                {$row.course_name}
+                </span> <span style="display:block;">
+                {$row.course_idEN}
+                {$row.course_nameEN}
+                </span>
+                <ul>
+                  <table width="100%" bgcolor="#FFFFFF">
+                    <thead class="k-header">
+                      <tr>
+                        <th width="13%">กลุ่มเรียน</th>
+                        <th width="21%">สำหรับสาขา</th>
+                        <th width="23%">ประเภทวิชา</th>
+                        <th width="9%">ที่นั่ง</th>
+                        <th width="15%">ลง</th>
+                        <th width="19%">ดำเนินการ</th>
+                      </tr>
+                    </thead>
+                    
+                    {foreach $page._section as $itemSection}
+                    
+                    {if $itemSection@key eq $row.course_id}
+                     {foreach $itemSection as $_section}
+                    <tr>
+                      <td colspan="7" bgcolor="#CCCCCC" style="font-weight:bold;text-decoration:underline;">{$_section@key}</td>
+                    </tr>
+                   {foreach $_section as $microItem}
+                    <tr class="innersection">
+                      <td align="center">{$microItem.section}</td>
+                      <td align="left">{$microItem.formajor}</td>
+                      <td align="center">{$microItem.category}</td>
+                      <td align="center">{$microItem.total_seat}</td>
+                      <td align="center">{$microItem.seat}</td>
+                      <td align="left"><ul class="ulmenu">
+                          <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"><a href="/edu/course/section/edit?courseid={$microItem.course_id}&sectionid={$microItem.secid}&section={$microItem.section}"> แก้ไข</a></li>
+                          <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"><a href="#" class="delSection" rel="{$microItem.secid}" data-rel="{$row.course_id}" data-id="{$microItem.section}"> ลบ</a></li>
+                          <!--<li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"><a href="/edu/course/section/schedule?secid={$_section.secid}&section={$_section.section}&degtype={$_section.deg_id}&courseid={$_section.course_id}"> กำหนดเวลา</a></li>-->
+                        </ul></td>
+                    </tr>
+                    {/foreach}
+                    {/foreach}
+                    {/if}
+                    {/foreach}
+                  </table>
+                </ul>
+              </li>
+            </ul></td>
+          <td style="text-align: center" valign="top">{$row.lecture}
+            -
+            {$row.practice}</td>
+          <td style="text-align: center" valign="top">{$row.credit}</td>
+          <td valign="top"><ul class="ulmenu">
+              <li><img src="/templates/skin/HTML5 Admin Template/images/icn_new_article.png" style="vertical-align:middle;"> <a href="/edu/course/section/new?courseid={$row.course_id}">sec. ใหม่</a></li>
+              <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"> <a href="/edu/course/form/edit?courseid={$row.course_id}">แก้ไขวิชา</a></li>
+              <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"> <a href="#" class="delCourse" rel="{$row.course_id}">ลบวิชา</a></li>
+            </ul></td>
+        </tr>
+        {/foreach}
+      </tbody>
+    </table>
+  </section>
+  {elseif $page.view eq "form"}
+  <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/course" style="text-decoration:underline;">จัดการวิชา</a> >
+    {if empty($page.editAll)}
+    เพิ่มวิชาใหม่
+    {else}
+    แก้ไขวิชา
+    {/if}
+  </div>
+  {if !empty($res.callback.result)}
+  <p id="landing">
+    {$res.callback.result}
+    <br>
+    หากต้องการสร้างกลุ่มเรียนใหม่ กรุณา <a href="/edu/course/section/new?courseid={$res.addid}">คลิ๊กที่นี้</a>
+    {/if}
+  <div>
+    <form id="addnew" method="post" action="">
+      <fieldset>
+        <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:#000000 solid 1px;">
+          <thead class="k-header">
+            <tr>
+              <th colspan="2" scope="col" >แบบฟอร์มบันทึก และแก้ไขประเภทรายวิชา</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td width="22%">{if empty($page.editAll)}
+                ชื่อผู้บันทึก
+                {else}
+                ชื่อผู้แก้ไข
+                {/if}
+                :</td>
+              <td width="78%">{$page.user.nameTH}</td>
+            </tr>
+            <tr valign="middle">
+              <td>วิชาที่ต้องเรียนมาก่อน :</td>
+              <td><input name="course_before" >
+                (หากไม่มี กรุณาปล่อยว่าง)</td>
+            </tr>
+            <tr>
+              <td>สังกัด :</td>
+              <td><select name="major_id" onChange="callPrefixCourse(this.value)">
+                  
+                  {if !empty($page.editAll.0.major_id)}
+                  <option value="{$page.editAll.0.major_id}" selected>
+                  {$page.editAll.0.major_name}
+                  |
+                  {$page.editAll.0.fac_name}
+                  </option>
+                  {else}
+                  <option value="" disabled selected>กรุณาเลือก</option>
+                  {foreach $page._major as $item}
+                  <option value="{$item.major_id}">
+                  {$item.major_name}
+                  |
+                  {$item.fac_name}
+                  </option>
+                  {/foreach}
+                  {/if}
+                </select>
+            </tr>
+            <tr>
+              <td>รหัสวิชา :</td>
+              <td><div style="float:left;">
+                  <input name="course_id_prefix" type="text" id="course_id_prefix" size="3" maxlength="2" readonly class="k-textbox" value="{$page['editAll'][0]['course_id_prepostfix'][0]}">
+                  <input name="course_id_postfix" type="text" required id="course_id_postfix" size="3" maxlength="3" class="k-textbox" onKeyUp="return copyValueChk(this)" value="{$page['editAll'][0]['course_id_prepostfix'][1]}" {if !empty($page.editAll)} readonly {/if}>
+                </div>
+                <div id="status_bar" style="position:relative; float:left; padding:3px;"></div></td>
+            </tr>
+            <tr>
+              <td>Course ID :</td>
+              <td><div style="float:left;">
+                  <input name="course_id_prefixEN" type="text" id="course_id_prefixEN" size="3" maxlength="2" readonly class="k-textbox" value="{$page['editAll'][0]['course_id_prepostfixEN'][0]}">
+                  <input name="course_id_postfixEN" type="text" id="course_id_postfixEN" size="3" maxlength="3" class="k-textbox" readonly value="{$page['editAll'][0]['course_id_prepostfixEN'][1]}{$page['editAll'][0]['course_id_prepostfixEN'][2]}">
+                </div>
+                <div id="status_bar" style="position:relative; float:left; padding:3px;"></div></td>
+            </tr>
+            <tr>
+              <td>ชื่อวิชา :</td>
+              <td><input name="course_name" value="{$page.editAll.0.course_name}" size="70" maxlength="255" required validationMessage="กรุณากป้อนชื่อวิชาที่เป็นภาษาไทย" class="k-textbox" onKeyUp="checkThai(this)"></td>
+            </tr>
+            <tr>
+              <td>Course Name :</td>
+              <td><input name="course_nameEN" value="{$page.editAll.0.course_nameEN}" size="70" maxlength="255" required validationMessage="กรุณากป้อนชื่อวิชาที่เป็นภาษาอังกฤษ" class="k-textbox" onKeyUp="checkEngChar(this)"></td>
+            </tr>
+            <tr>
+              <td>รายละเอียดวิชา :</td>
+              <td><textarea name="course_description" cols="70" rows="3" required validationMessage="กรุณาป้อนรายละเอียดวิชาที่เป็นภาษาไทย" class="k-textbox">{$page.editAll.0.course_description}
+</textarea>
+                *หากไม่ระบุ กรุณาใส่เครื่องหมาย -</td>
+            </tr>
+            <tr>
+              <td>Course Description :</td>
+              <td><textarea name="course_descriptionEN" cols="70" rows="3" required validationMessage="กรุณาป้อนรายละเอียดวิชาที่เป็นภาษาอังกฤษ"  class="k-textbox">{$page.editAll.0.course_descriptionEN}
+</textarea>
+                *หากไม่ระบุ กรุณาใส่เครื่องหมาย -</td>
+            </tr>
+            <tr>
+              <td>หน่วยกิต :</td>
+              <td><input name="credit" value="{$page.editAll.0.credit}" size="3" maxlength="2" required validationMessage="กรุณาป้อนหน่วยกิต" onKeyUp="checkDex(this)"  class="k-textbox">
+                หน่วย</td>
+            </tr>
+            <tr>
+              <td>ชั่วโมงบรรยาย / สัปดาห์ :</td>
+              <td><input name="lecture" value="{$page.editAll.0.lecture}" size="5" maxlength="1" required validationMessage="กรุณาระบุชั่วโมงบรรยาย / สัปดาห์" onKeyUp="checkDex(this)"  class="k-textbox">
+                ชั่วโมง </td>
+            </tr>
+            <tr>
+              <td>ชั่วโมงปฎิบัติ / สัปดาห์ :</td>
+              <td><input name="practice" value="{$page.editAll.0.practice}" size="5" maxlength="1" required onKeyUp="checkDex(this)"  class="k-textbox">
+                ชั่วโมง</td>
+            </tr>
+            <tr>
+              <td>สอบกลางภาค</td>
+              <td><input name="date_midterm" type="text" size="70" maxlength="255" value="{$page.editAll.0.date_midterm}"/></td>
+            </tr>
+            <tr>
+              <td>สอบปลายภาค</td>
+              <td><input name="date_final" type="text" size="70" maxlength="255" value="{$page.editAll.0.date_final}"/></td>
+            </tr>
+            <tr>
+              <td>สถานะ :</td>
+              <td><select name="status">
+                  {if !empty($page.editAll.0.status)}
+                  {if $page.editAll.0.status == 1}
+                  <option value="1" selected>เปิดใช้งาน</option>
+                  <option value="0">ยกเลิกการใช้งาน</option>
+                  <option value="2">รอการอนุมัติ</option>
+                  {elseif $page.editAll.0.status == 2}
+                  <option value="2" selected>รอการอนุมัติ</option>
+                  <option value="0" >ยกเลิกการใช้งาน</option>
+                  <option value="1">เปิดใช้งาน</option>
+                  {else}
+                  <option value="0" selected>ยกเลิกการใช้งาน</option>
+                  <option value="1">เปิดใช้งาน</option>
+                  <option value="2">รอการอนุมัติ</option>
+                  {/if}
+                  {else}
+                  <option value="2">รอการอนุมัติ</option>
+                  <option value="1" selected>เปิดใช้งาน</option>
+                  <option value="0">ยกเลิกการใช้งาน</option>
+                  {/if}
+                </select></td>
+            </tr>
+            <tr>
+              <td colspan="2" align="center"><input type="submit" name="operation" value="{if empty($row)}เพิ่มข้อมูล{else}แก้ไขข้อมูล{/if}"  onClick="return confirm('ยืนยันข้อมูล')">
+                <input type="reset" value="Clear" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+    </form>
+  </div>
+  {elseif $page.view eq "section"}
+  <section>
+    <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/course" style="text-decoration:underline;">จัดการวิชา</a> >
+      {if empty($page.EditSec)}
+      เพิ่มกลุ่มเรียน
+      {else}
+      แก้ไขกลุ่มเรียน
+      {/if}
+    </div>
+    {if empty($page.dlvl)}
+    <p style="background:#FF9999; border:#FF0000 solid 3px; padding:10px;">กรุณากำหนดระดับบปริญญาก่อนที่จะใช้งานการแบ่งกลุ่มเรียน กำหนดระดับปริญญา <a href="/edu/level?cfm=presection">คลิ๊กที่นี้</a></p>
+    {/if}
+    {if empty($page._teacher)}
+    <p style="background:#FF9999; border:#FF0000 solid 3px; padding:10px;">กรุณากำหนดรายชื่อบุคลกรก่อนที่จะใช้งานการแบ่งกลุ่มเรียน กำหนดบุคลากร <a href="/edu/employee/form/new?cfm=presection">คลิ๊กที่นี้</a></p>
+    {/if}
+    {if !empty($res.callback.result)}
+    <p id="landing">
+      {$res.callback.result}
+      <br>
+      หากต้องการเพิ่มหลักสูตรและแผนการศึกษา กรุณา<a href="/edu/syllabus">คลิ๊กที่นี้</a></p>
+    {/if}
+    <form name="frm0" action="" method="post">
+      <table width="100%" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:#000000 solid 1px;">
+        <thead>
+          <tr>
+            <th colspan="2" scope="col" class="k-header">กลุ่มเรียน (Section) วิชา <u>
+              {$page.EditSec.course_id}
+              {$page.EditSec.course_name}
+              </u></th>
+          </tr>
+        </thead>
+        <tbody valign="top">
+          <tr>
+            <td width="18%">{if empty($row)}
+              ชื่อผู้บันทึก
+              {else}
+              ชื่อผู้แก้ไข
+              {/if}</td>
+            <td width="82%">{$page.user.nameTH}</td>
+          </tr>
+          <tr>
+            <td>ระดับปริญญา :</td>
+            <td>
+           {if empty($page.EditSec.degree_level_name)}
+            <select name="degree_level_id" onChange="return getNumberSection(this)">
+                <option value="" selected disabled>กรุณาเลือก</option>
+                {foreach $page.dlvl as $item}
+                <option value="{$item.id}">
+                {$item.degree_level_name}
+                {$item.type}
+                </option>
+                {/foreach}
+              </select>
+           {else}
+           {$page.EditSec.degree_level_name}
+           <input name="degree_level_id" type="hidden" value="{$page.EditSec.deg_id}">
+           {/if}
+           </td>
+          </tr>
+          <tr>
+            <td>วิชา :</td>
+            <td><input name="course" type="text" value="{if empty($page.EditSec)}{$page.c_name}{else}{$page.EditSec.course_name}{/if}" size="70" disabled class="k-textbox"></td>
+          </tr>
+          <tr>
+            <td>กลุ่มที่ : </td>
+            <td><input name="section" id="section" type="text" class="k-textbox" value="{$page.EditSec.section}" size="3" maxlength="3" readonly></td>
+          </tr>
+          <tr>
+            <td>สำหรับสาขา :</td>
+            <td><textarea name="formajor" cols="60" rows="3" class="k-textbox">{$page.EditSec.formajor}
+</textarea>
+              หากไม่ระบุ กรุณาใส่ -</td>
+          </tr>
+          <tr>
+            <td>จำนวนที่นั่ง :</td>
+            <td><input name="total_seat" type="text" size="2" maxlength="3" value="{$page.EditSec.total_seat}"  required validationMessage="กรอกจำนวนที่นั่ง" class="k-textbox" onKeyUp="return checkDex(this)"></td>
+          </tr>
+          
+          <tr>
+            <td>ประเภทการเรียนการสอน :</td>
+            <td>
+            <input  id="study_lec" type="checkbox" disabled {if $page.EditSec.study_lec || ($page.chkLab>0)} checked {/if}  >
+            <input name="study_lec" type="hidden" value="{if $page.chkLab>0 }1{else}0{/if}">
+            ปฏิบัติ 
+              <input id="study_practice" disabled type="checkbox"{if $page.EditSec.study_practice || ($page.chkLec>0)} checked {/if} >
+              <input name="study_practice" type="hidden" value="{if $page.chkLec>0}1{else}0{/if}">
+              บรรยาย</td>
+          </tr>
+         
+          <tr>
+            <td>ผู้สอน :</td>
+            <td><input name="teacher" id="teacher" type="text"/></td>
+          </tr>
+          <tr>
+            <td>ประเภทวิชา :</td>
+            <td><input name="category" type="text" value="{$page.EditSec.category}" maxlength="255" size="70" required validationMessage="ระบุประเภทวิชา" class="k-textbox"></td>
+          </tr>
+          <tr>
+            <td>สถานะ :</td>
+            <td><select name="status">
+                {if !empty($page.EditSec.status)}
+                {if $page.EditSec.status == 1}
+                <option value="1" selected>เปิดใช้งาน</option>
+                <option value="0">ยกเลิกการใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {elseif $page.EditSec.status == 2}
+                <option value="2" selected>รอการอนุมัติ</option>
+                <option value="0" >ยกเลิกการใช้งาน</option>
+                <option value="1">เปิดใช้งาน</option>
+                {else}
+                <option value="0" selected>ยกเลิกการใช้งาน</option>
+                <option value="1">เปิดใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {/if}
+                {else}
+                <option value="1">เปิดใช้งาน</option>
+                <option value="0">ยกเลิกการใช้งาน</option>
+                <option value="2">รอการอนุมัติ</option>
+                {/if}
+              </select></td>
+          </tr>
+          <tr>
+            <td colspan="2" align="center">{if isset($page.EditSec)}
+              <input name="operation" type="submit" value="บันทึกการแก้ไข" onClick="return confirm('ยืนยันข้อมูล')">
+              {else}
+              <input name="operation" type="submit" value="เพิ่มข้อมูล" onClick="return confirm('ยืนยันข้อมูล')">
+              {/if}
+              <input name="course_id" type="hidden" value="{if empty($page.EditSec)}{$page.c_id}{else}{$page.EditSec.course_id}{/if}">
+              {if empty($page.EditSec.id)}
+              <input name="hsec_id" type="hidden" value="{$page.EditSec.secid}">
+              {/if}</td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+    <script>
+	function getNumberSection(o){
+		var courseid = "{$page._get.courseid}";
+		var degree_lvl = o.value;
+		$.post("/edu/course/section/new",
+		{
+			"findSection":true,
+			"courseid":courseid,
+			"degree_lvl":degree_lvl
+		},
+		function(res){
+			document.getElementById("section").value = res.CountSec;
+		},"json");
+	}
+	function TeacherJSON(){
+		var pre = '{$page._teacher}';
+		if(pre=='')
+			return  null;
+		else
+			var json = eval('('+pre+')');
+			return json;
+	}
+	function majorJSON(){
+		var pre = '{$page.aMajor}';
+		if(pre=='')
+			return  null;
+		else
+			var json = eval('('+pre+')');
+			return json;
+	}
+	$("#for_major").tokenInput("/service/callbackJson?module=major", 
+		{ 	theme: "facebook",
+			preventDuplicates: true,
+			prePopulate: majorJSON()
+	});	
+	$("#teacher").tokenInput("/service/callbackJson?module=emp_unteach", 
+		{ 	theme: "facebook",
+			preventDuplicates: true,
+			deleteConfirm: true,
+			prePopulate:  TeacherJSON(),
+			onDelete: function (item) {
+               $.post('/edu/course',{ "deltype":"{{'teachDel'|md5}|sha1}","emp_id":item.id,"sec_id":'{$page.EditSec.id}'},function(data){
+				   if(data.result){
+					   alert("เรียบร้อยแล้ว")
+				   }
+				},'json');
+            }
+	});	
+	</script> 
+  </section>
+  {elseif $page.view eq "schedule"}
+  <script>
+  function goRoomStatement(o){
+	  var section = '{$page._get.section}';
+	  var secid = '{$page._get.secid}';
+	  var degtype = '{$page._get.degtype}';
+	  var courseid = '{$page._get.courseid}';
+  	$.post("/edu/course/section/schedule/chkroom",
+	{
+		//"chkroom":true,
+		"secid":secid,
+		"section":section,
+		"degtype":degtype,
+		"courseid":courseid,
+		"roomid":o.value
+	},function(res){
+		$("div#tableLanding").html(res);
+	})
+  }
+  </script>
+  {/if}
+  <div class="clear-all"></div>
+</div>
+</body>
+</html>

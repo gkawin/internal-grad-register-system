@@ -1,0 +1,179 @@
+<script>
+var part = '{$page.segment}';
+function ShowKendoWindow(log_id,title) {
+   var title = title;
+        var url = (part==="log") ? "/system/log/details?id="+log_id : "/system/userlog/details?id="+log_id;
+        var win = $(".modal-window");
+        if (!win.data("kendoWindow")) {
+            // window not yet initialized
+            win.kendoWindow({
+                animation: {
+                    open: {
+                        effects: { fadeIn: {} },
+                        duration: 200,
+                        show: true
+                    },
+                    close: {
+                        effects: { fadeOut: {} },
+                        duration: 200,
+                        hide: true
+                    }
+                },
+				width: 400,
+                content: url,
+                title: title,
+                draggable: true,
+                refresh: function() { this.center();}
+            }).data("kendoWindow").center().open();
+            //event.preventDefault();
+        }
+        else {
+            // reopening window
+            win.data("kendoWindow")
+            .refresh(url) // request the URL via AJAX
+            .title(title)          
+            .center().open() // open the window;
+        }
+}
+function getselect(){
+	var cb = new Array();
+	$(".cb:checked").each(function(){
+		cb.push(this.value);
+	});
+	return cb;
+}
+$(function(){
+	$("#cball").click(function(){
+		$(".cb").attr("checked", this.checked);
+	});
+	$(".ldel").click(function(event){
+		if(!confirm("คุณแน่ใจที่จะลบข้อมูลการเปลี่ยนแปลงระบบ?")) return;
+			$this = $(this);
+			var cb = getselect();
+			
+			if(part==="log"){
+				if(cb.length){
+					$this.addClass("loading");
+					$.post("/system/log/del",{ "part":part,"del":cb.join(",")},function(data){
+						window.location.reload();
+					},"json");
+				}else{
+					alert("กรุณาเลือกรายการอย่างน้อย 1 รายการ");
+				}
+			}else if(part==="userlog"){
+				if(cb.length){
+					$this.addClass("loading");
+					$.post("/system/userlog/del",{ "part":part,"del":cb.join(",")},function(data){
+						window.location.reload();
+					},"json");
+				}else{
+					alert("กรุณาเลือกรายการอย่างน้อย 1 รายการ");
+				}
+			}
+		event.preventDefault()
+	});
+	
+	$("img").css("vertical-align","middle")
+	$(".del_syslog").click(function(){
+	if(!confirm("คุณแน่ใจที่จะลบข้อมูลการเปลี่ยนแปลงระบบ?")) return;
+		$this = $(this);
+		$this.addClass("loading");
+		$.post("/system/log/del",{ "log_id":$this.attr("rel")},
+		function(res){
+			if(res.result){
+				$this.parents("tr").fadeOut("slow").remove();
+
+			}else{
+				alert("ทำรายการไม่สำเร็จ")
+			}
+		},'json');
+	});
+})
+
+
+</script>
+{if $page.view eq "log"}
+
+<article class="module width_full">
+  <header>
+    <h3>รายการข้อมูลการเปลี่ยนแปลงของระบบ</h3>
+  </header>
+  <div class="module_content">
+    <table id="tblistLog" border="0" width="100%" cellpadding="5">
+      <thead class="k-header" align="center">
+        <tr>
+          <td width="2%"><input type="checkbox" name="cball" id="cball" /></td>
+          <td width="10%">วันที่</td>
+          <td width="10%">เวลา</td>
+          <td width="10%">กระทำ</td>
+          <td width="14%">ผู้กระทำ</td>
+          <td width="8%">ผลการดำเนินการ</td>
+          <td width="8%">ดำเนินการ</td>
+        </tr>
+      </thead>
+      <tbody>
+        {foreach $row._log as $item}
+        <tr>
+          <td align="center"><input type="checkbox" name="cb[]" id="cb[]" class="cb" value="{$item.log_id}"/></td>
+          <td>{$item.day}</td>
+          <td>{$item.time}</td>
+          <td>{$item.action}</td>
+          <td>{$item.whoaction}</td>
+          <td align="center">
+          {if $item.result eq "OK"}
+          <b style="color:green">{$item.result}</b>
+          {else}
+          <b style="color:red">{$item.result}</b>
+          {/if}
+          </td>
+          <td ><img src="/templates/skin/HTML5 Admin Template/images/icn_trash.png" class="ico_del del_syslog" data-rel="{$item.log_id}" style="cursor:pointer;" rel="{$item.log_id}"> <a href="#del" class="del_syslog" rel="{$item.log_id}">ลบข้อมูล</a><br>
+            <img src="/templates/skin/HTML5 Admin Template/images/icn_categories.png" title="ดูรายละเอียด" class="ico_del"  style="cursor:pointer;" onClick="ShowKendoWindow({$item.log_id},'{$item.day} - {$item.time}')"> <a href="#openDetail" class="openDetail" onClick="ShowKendoWindow({$item.log_id},'{$item.day} - {$item.time}')">ดูรายละเอียด</a></td>
+        </tr>
+        {/foreach}
+      </tbody>
+    </table>
+    <div class="clear"></div>
+    <p >ทำกับที่เลือก : <a href="#ldel" class="ldel">โยนทิ้ง</a> </p>
+  </div>
+</article>
+
+{elseif $page.view eq "userlog"}
+<article class="module width_full">
+  <header>
+    <h3>รายการข้อมูลการเปลี่ยนแปลงของบัญชีผู้ใช้</h3>
+  </header>
+  <div class="module_content">
+    <table id="tblistLog" border="0" width="100%" cellpadding="5">
+      <thead class="k-header" align="center">
+        <tr>
+          <td width="2%"><input type="checkbox" name="cball" id="cball" /></td>
+          <td width="6%">บัญชี</td>
+          <td width="10%">เข้าระบบล่าสุด</td>
+          <td width="12%">ฝ่าย</td>
+          <td width="12%">เจ้าของบัญชี</td>
+          <td width="6%">IP Address</td>
+          <td width="6%">โมดูลล่าสุด</td>
+          <td width="4%">ดำเนินการ</td>
+        </tr>
+      </thead>
+      <tbody>
+        {foreach $row._acclog as $item}
+        <tr>
+          <td align="center"><input type="checkbox" name="cb[]" id="cb[]" class="cb" value="{$item.id}"/></td>
+          <td>{$item.username}</td>
+          <td>{$item.last_login}</td>
+          <td>{$item.sec_work}</td>
+          <td>{$item.EMP_NAME}</td>
+          <td>{$item.ip}</td>
+          <td>{$item.last_module}</td>
+          <td align="center"><img src="/templates/skin/HTML5 Admin Template/images/icn_trash.png" class="ico_del" data-rel="{$item.id}" style="cursor:pointer;"></td>
+        </tr>
+        {/foreach}
+      </tbody>
+    </table>
+    <div class="clear"></div>
+    <p >ทำกับที่เลือก : <a href="#ldel" class="ldel">โยนทิ้ง</a> </p>
+  </div>
+</article>
+{/if}
+<div class="modal-window"></div>

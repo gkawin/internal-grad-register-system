@@ -1,0 +1,491 @@
+{include file = 'header.tpl.html'}
+<style>
+
+ul.token-input-list-facebook{
+	width:455px;
+}
+:disabled{
+	background:#CCCCCC;
+}
+</style>
+<script>
+$(function(){
+	
+	$(".rdel").click(function(){
+		if(!confirm("คุณต้องการลบข้อมูลระดับการศึกษาหรือไม่")) return;
+		$this = $(this);
+		$this.addClass("loading");
+		$.post("/edu/building_room",{ "del":$this.attr("rel"),"room_name":$this.attr("data-rel")},function(res){
+			if(res.result){
+					$this.parents("tr").fadeOut("fast", function(){
+						$this.parents("tr").remove();
+					});
+					$this.removeClass("loading");
+			}else{
+				alert("ไม่สามารถลบได้ เพราะมีการลงตารางเรียนในห้องดังกล่าว กรุณาถอนตารางเรียนออกก่อนดำเนินการ");
+				$this.removeClass("loading");
+			}
+		},'json');
+		return(false);
+	});
+});
+	
+	function chkValue(elm){
+		var filter = /^[ก-ฮ0-9]*$/;
+				$("#status_bar").html('<img src="../../../common/images/icons/loading.gif" align="absmiddle">&nbsp;Checking availability...');
+			 	$.ajax({  
+    			type: "POST",  
+				url: "/edu/building_room/form/chk",  
+				data: "chkAvaliable="+ elm.value,  
+				success: 
+				function(msg){
+			 		$("#status_bar").ajaxComplete(function(event, request, settings){ 
+						if(msg){ 
+							$(this).html('&nbsp;<img src="../../../common/images/icons/accepted.png" align="absmiddle"> <font color="Green"> Available </font>');
+							return true;
+						}else{  
+							$(this).html('&nbsp;<font color="RED"> ไม่ว่าง </font>');
+							return false;
+						}   
+					});
+				}
+			});
+		}
+		
+		function getFloor(o){
+			$.post("/service/callbackJson?module=building_no_token",
+			{
+				"q":o.value
+			},function(res){
+					$("select#floor").html("<option selected disabled>กรุณาเลือก</option>")
+				for(var i=1;i<=res[0].total_floor;i++){
+					$("select#floor").append("<option value='"+i+"'>"+i+"</option>")
+				}
+			},'json')
+		}
+</script> 
+<!-- CONTENT -->
+<div class="container">
+
+
+   
+    {if $page.view eq "list"}
+     <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > จัดการห้องเรียน</div>
+    <section>
+      <ul style="padding:0;">
+        <li class="k-button"><a href="/edu/building_room/form/new" class="add_new_icon ex1">เพิ่มห้องเรียนใหม่</a></li>
+      </ul>
+      <table  width="100%" cellpadding="3" id="tblist">
+        <thead class="k-header">
+          <tr>
+            <th >ชื่อห้อง</th>
+            <th >อาคาร</th>
+            <th >ชั้น</th>
+            <th >ประเภทห้อง</th>
+            <th >ความจุ</th>
+            <th >พื้นที่ใช้สอย</th>
+            <th >สถานะ</th>
+            <th >ดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {foreach $page.all as $row}
+          <tr class="rowhl" valign="top">
+            <td style="text-align: left">{$row.room_name}</td>
+            <td style="text-align: left">{$row.building_name}</td>
+            <td width="35" align="center" style="text-align: left">{$row.floor}</td>
+            <td align="center"  valign="top" style="text-align: left">{$row.room_type}</td>
+            <td align="center"  valign="top" style="text-align: left">{$row.capacity}
+              คน</td>
+            <td align="center"  valign="top" style="text-align: left">{$row.area}
+              ตร.ม.</td>
+            <td align="center" style="text-align: left">{$row.status1}</td>
+            <td align="center" valign="top" style="text-align: left"><div class="tool">
+                <ul style="list-style:none;padding:0;margin:0;">
+                  <li><img src="../../../common/images/icons/edit.gif" style="vertical-align:middle;"> <a href="/edu/building_room/form/edit?id={$row.id}&bid={$row.building_id}" >แก้ไขรายการ</a></li>
+                  <li><img src="../../../common/images/icons/delete.png" style="vertical-align:middle;"> <a href="#" class="rdel" rel="{$row.id}" data-rel="{$row.room_name}">ลบรายการ</a></li>
+                  <li><img src="../../../common/images/icons/room_schedule.png" style="vertical-align:middle;"> <a href="/edu/building_room/time?roomid={$row.id}&roomname={$row.room_name}&bid={$row.building_id}&bname={$row.building_name}">เพิ่มตารางเวลา</a></li>
+                </ul>
+              </div></td>
+          </tr>
+          {/foreach}
+        </tbody>
+      </table>
+    </section>
+    {elseif $page.view eq "form"}
+     <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/building_room" style="text-decoration:underline;">จัดการห้องเรียน</a> > {if empty($page.edit)}เพิ่มห้องเรียนใหม่{else}แก้ไขห้องเรียน{/if}</div>
+      {if !empty($res.callback.result)}
+      <p id="landing">
+        {$res.callback.result}<br>
+        หากต้องการกำหนดระดับปริญญา กรุณา <a href="/edu/level">คลิ๊กที่นี้</a>
+      </p>
+
+     
+
+    {/if}
+    <div>
+      <form id="addnew" method="post" action="">
+        <fieldset>
+          <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:#000 1px solid;">
+            <thead class="k-header">
+              <tr>
+                <th colspan="2" scope="col">แบบฟอร์มบันทึก และแก้ไขห้องเรียน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td width="20%">ชื่อห้อง :</td>
+                <td width="80%"><input name="room_name" value="{$page.edit.room_name}" size="60" maxlength="255" required class="k-textbox" style="float:left;" onKeyUp="return chkValue(this)"><div style="float:left;padding:3px;" id="status_bar"></div></td>
+              </tr>
+              <tr >
+                <td>อาคาร :</td>
+                <td>{if empty($page.edit.building_id)}
+                  <select name="building_id" onChange="getFloor(this)">
+                    <option value="" disabled selected>กรุณาเลือก</option>
+                    {foreach $page._building as $item}
+                    <option value="{$item.building_id}">
+                    {$item.building_name}
+                    </option>
+                    {/foreach}
+                  </select>
+                  {else}
+                  <input name="building_name" class="k-textbox" value="{$page.edit.building_name}" size="70" maxlength="255" disabled>
+                  {/if}</td>
+              </tr>
+              <tr>
+                <td>ชั้น :</td>
+                <td>{if empty($page.edit.floor)}<select name="floor" id="floor"></select>
+                {else}
+                <input name="floor" class="k-textbox" value="{$page.edit.floor}" size="2" disabled>
+                {/if}
+                </td>
+              </tr>
+              <tr >
+                <td>ประเภทห้อง :</td>
+                <td><label>
+                    <input type="radio" name="room_type" value="LEC" class="room_type" {if $page.edit.room_type eq 'LEC'} checked {/if}>
+                    Lecture</label>
+                  <label>
+                    <input type="radio" name="room_type" value="LAB" class="room_type" {if $page.edit.room_type eq 'LAB'} checked {/if}>
+                    Laboratory</label></td>
+              </tr>
+              <tr>
+                <td>ความจุ :</td>
+                <td><input name="capacity" value="{$page.edit.capacity}" size="3" maxlength="3" required class="k-textbox" onKeyUp="checkDex(this)">
+                  คน</td>
+              </tr>
+              <tr >
+                <td>พื้นที่ใช้สอย :</td>
+                <td><input name="area" value="{$page.edit.area}" size="3" maxlength="3" required class="k-textbox" onKeyUp="checkDex(this)">
+                  ตร.ม.</td>
+              </tr>
+              <tr valign="top">
+                <td>อุปกรณ์ในห้อง :</td>
+                <td>
+                <fieldset style="width:50%;">
+               	  <legend>
+                    อุปกรณ์พื้นฐาน
+                    </legend>
+                   <table width="100%" border="0" cellspacing="0" cellpadding="5">
+ 
+  <tr>
+    <td colspan="4" class="k-header">อุปกรณ์ห้อง Lecture</td>
+    </tr>
+   <tbody id="LEC_REMARK" style="display:none;">
+  <tr>
+    <td width="30%"><input type="checkbox" name="remark[lec][comp]" value="1" {if $page.edit.remark.lec.comp} checked {/if} disabled>คอมพิวเตอร์</td>
+    <td width="27%"><input type="checkbox" name="remark[lec][proj]" value="1" disabled {if $page.edit.remark.lec.proj} checked {/if}>Projector</td>
+    <td width="19%" disabled><input type="checkbox" name="remark[lec][scr]" value="1" disabled {if $page.edit.remark.lec.scr} checked {/if}>จอภาพ</td>
+    <td width="24%" ><input type="checkbox" name="remark[lec][table]" value="1" disabled {if $page.edit.remark.lec.table} checked {/if}>โต๊ะเรียน</td>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="remark[lec][board]" value="1" disabled {if $page.edit.remark.lec.board} checked {/if}>กระดาน</td>
+    <td><input type="checkbox" name="remark[lec][wpen]" value="1" disabled {if $page.edit.remark.lec.wpen} checked {/if}>ปากกา Whiteboard</td>
+    <td></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr valign="top">
+    <td ><input type="checkbox" id="openOtherLec" disabled {if isset($page.edit.remark_text.lec)} checked{/if} >อุปกรณ์เพิ่มเติม</td>
+     <td colspan="3"><textarea name="remark_text_lec" rows="2" class="k-textbox" {if !isset($page.edit.remark_text.lec)}disabled{/if} id="remark_LEC">{$page.edit.remark_text.lec}</textarea>
+       <br>
+       - หากมีมากกว่า 1 รายการ กรุณาคั่นด้วย , เท่านั้น<br>
+       - หากไม่ระบุ กรุณาปล่อยว่าง</td>
+  </tr>
+  </tbody>
+  
+  <tr>
+    <td colspan="4" class="k-header">อุปกรณ์ห้อง Lab</td>
+    </tr>
+    <tbody id="LAB_REMARK" style="display:none;">
+  <tr>
+    <td><input type="checkbox" name="remark[lab][bchem]" value="1" disabled {if $page.edit.remark.lab.bchem} checked {/if}>
+      ตู้เก็บสารเคมี</td>
+    <td><input type="checkbox" name="remark[lab][lav]" value="1" disabled {if $page.edit.remark.lab.lav} checked {/if}>
+      อ่างล้างมือ</td>
+    <td><input type="checkbox" name="remark[lab][regf]" value="1" disabled {if $page.edit.remark.lab.regf} checked {/if}>
+      ตู้แช่</td>
+    <td><input type="checkbox" name="remark[lab][oven]" value="1" disabled {if $page.edit.remark.lab.oven} checked {/if}>
+      ตู้อบ</td>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="remark[lab][comp]" value="1" disabled {if $page.edit.remark.lab.comp} checked {/if}>
+      คอมพิวเตอร์</td>
+    <td><input type="checkbox" name="remark[lab][proj]" value="1" disabled {if $page.edit.remark.lab.proj} checked {/if}>
+      Projector</td>
+    <td><input type="checkbox" name="remark[lab][scr]" value="1" disabled {if $page.edit.remark.lab.scr} checked {/if}>
+      จอภาพ</td>
+    <td><input type="checkbox" name="remark[lab][tab]" value="1" disabled {if $page.edit.remark.lab.tab} checked {/if}>
+      โต๊ะเรียน</td>
+  </tr>
+  <tr valign="top">
+    <td><input type="checkbox" id="openOtherLab" disabled {if isset($page.edit.remark_text.lab)} checked{/if}>อุปกรณ์เพิ่มเติม</td>
+    <td colspan="3"><textarea name="remark_text_lab" rows="2" class="k-textbox" {if !isset($page.edit.remark_text.lab)}disabled{/if} id="reamark_LAB">{$page.edit.remark_text.lab}</textarea>
+      <br>
+      - หากมีมากกว่า 1 รายการ กรุณาคั่นด้วย , เท่านั้น<br>
+- หากไม่ระบุ กรุณาปล่อยว่าง</td>
+  </tr>
+  </tbody>
+</table>
+
+                    
+                </fieldset>
+                                
+               <!-- <textarea name="remark" cols="70" rows="5">{$page.edit.remark}
+</textarea>--></td>
+              </tr>
+              <tr >
+                <td>สถานะ :</td>
+                <td><select name="status">
+                    {if !empty($page.edit.status)}
+                    {if $page.edit.status == 1}
+                    <option value="1" selected>เปิดใช้งาน</option>
+                    <option value="0">ยกเลิกการใช้งาน</option>
+                    <option value="2">รอการอนุมัติ</option>
+                    {elseif $page.edit.status == 2}
+                    <option value="2" selected>รอการอนุมัติ</option>
+                    <option value="0" >ยกเลิกการใช้งาน</option>
+                    <option value="1">เปิดใช้งาน</option>
+                    {else}
+                    <option value="0" selected>ยกเลิกการใช้งาน</option>
+                    <option value="1">เปิดใช้งาน</option>
+                    <option value="2">รอการอนุมัติ</option>
+                    {/if}
+                    {else}
+                    <option value="1" selected>เปิดใช้งาน</option>
+                    <option value="0">ยกเลิกการใช้งาน</option>
+                    <option value="2">รอการอนุมัติ</option>
+                    {/if}
+                  </select></td>
+              </tr>
+              <tr>
+                <td colspan="2" align="center"><input type="submit" name="operation" value="{if empty($row)}เพิ่มข้อมูล{else}แก้ไขข้อมูล{/if}"  onClick="return confirm('ยืนยันข้อมูล')">
+                  <input type="reset" value="Clear" ></td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+      </form>
+    </div>
+    <script>
+    $(function(){
+		
+		$("#openOtherLab").click(function(){
+			var $textLab = $("textarea#reamark_LAB")
+			if($textLab.is(":disabled")){
+				$textLab.removeAttr("disabled");
+			}else{
+				$textLab.attr("disabled","disabled");
+			}
+		});
+		$("#openOtherLec").click(function(){
+			var $textLab = $("textarea#remark_LEC")
+			if($textLab.is(":disabled")){
+				$textLab.removeAttr("disabled");
+			}else{
+				$textLab.attr("disabled","disabled");
+			}
+		});
+		var room_type = '{$page.edit.room_type}';
+		if(room_type !=''){
+		if(room_type ==="LAB"){
+				$("tbody#LEC_REMARK").slideUp(function(){
+					$("tbody#LEC_REMARK > tr > td >input").each(function(index, element) {
+                        $(this).attr("disabled","disabled");
+                    });
+				})
+				$("tbody#LAB_REMARK").slideDown(function(){
+					$("tbody#LAB_REMARK > tr > td >input").each(function(index, element) {
+                        $(this).removeAttr("disabled");
+                    });
+				})
+			}else{
+				$("tbody#LEC_REMARK").slideDown(function(){
+					$("tbody#LEC_REMARK > tr > td >input").each(function(index, element) {
+						$(this).removeAttr("disabled");
+                    });
+				})
+				$("tbody#LAB_REMARK").slideUp(function(){
+					$("tbody#LAB_REMARK > tr > td >input").each(function(index, element) {
+                          $(this).attr("disabled","disabled");
+                    });
+				})
+			}
+		}
+			
+		$(".room_type").click(function(){
+			var isSelect = $(this).val();
+			
+			if(isSelect === "LAB" || room_type ==="LAB"){
+				$("tbody#LEC_REMARK").slideUp(function(){
+					$("tbody#LEC_REMARK > tr > td >input").each(function(index, element) {
+                        $(this).attr("disabled","disabled");
+                    });
+				})
+				$("tbody#LAB_REMARK").slideDown(function(){
+					$("tbody#LAB_REMARK > tr > td >input").each(function(index, element) {
+                        $(this).removeAttr("disabled");
+                    });
+				})
+			}else{
+				$("tbody#LEC_REMARK").slideDown(function(){
+					$("tbody#LEC_REMARK > tr > td >input").each(function(index, element) {
+						$(this).removeAttr("disabled");
+                    });
+				})
+				$("tbody#LAB_REMARK").slideUp(function(){
+					$("tbody#LAB_REMARK > tr > td >input").each(function(index, element) {
+                          $(this).attr("disabled","disabled");
+                    });
+				})
+			}
+		});
+	});
+    </script>
+    {elseif $page.view eq "time"}
+    <div style="padding:5pt;"><a href="/edu" style="text-decoration:underline;">หน้าหลัก</a> > <a href="/edu/building_room" style="text-decoration:underline;">จัดการห้องเรียน</a> > จัดตารางห้องเรียน</div>
+    <div>
+      <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#FFFFFF" style="border:#000000 solid 1px;">
+        <thead class="k-header">
+          <tr>
+            <th colspan="2">กำหนดตารางเรียนของห้อง
+              {$page._get.roomname}
+              อาคาร
+              {$page._get.bname}</th>
+          </tr>
+        </thead>
+        <tr>
+          <td width="15%">กำหนดภาคการศึกษา</td>
+          <td><select id="use_term" onChange="chkAvalTerm(this.value,'chk')">
+            <option selected disabled>กรุณาเลือก</option>
+            <option value="1">ภาคเรียนที่ 1</option>
+            <option value="2">ภาคเรียนที่ 2</option>
+            <option value="3">ภาคเรียนที่ 3</option>    
+          </select></td>
+        </tr>
+        <tr>
+          <td>เลือกวิชา :</td>
+          <td><select id="course" onChange="chkAvalTerm(this.value,'getdeg')">
+          </select></td>
+        </tr>
+        <tr>
+          <td>ประเภทปริญญา :</td>
+          <td><select id="deg" onChange="chkAvalTerm(this.value,'getsection')">
+          </select></td>
+        </tr>
+        <tr>
+          <td>กลุ่มเรียน :</td>
+          <td><select name="course_section" id="course_section" onChange="chkAvalTerm(this.value,'getlearn')">
+          </select></td>
+        </tr>
+        <tr>
+          <td>ประเภทการเรียน :</td>
+          <td><select id="learn_type" onChange="chkAvalTerm(this.value,'showtable')">
+          </select></td>
+        </tr>
+       
+        <tr>
+          <td colspan="2">
+          <div id="landingtable"></div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <script>
+	var courseid = '';
+	var semester =  0;
+	var bid = '{$page._get.bid}'
+	var roomid = '{$page._get.roomid}'
+	var sectionid = 0;
+	var section = 0;
+	function chkAvalTerm(value,method){
+		if(method === "chk"){	// เลือกภาคการศึกษา เพื่อแสดงวิชา
+			semester = value
+			$.post("/edu/building_room/time/getcourse",{ "value":value},
+			function(res){
+				$("select#course").html("<option selected disable>กรุณาเลือก</option>");
+				$("select#deg").html("");
+				$("select#course_section").html("");
+				$("select#learn_type").html("");
+				for(x in res){
+					$("select#course").append("<option value="+res[x].course_id+">"+res[x].course_id+" "+res[x].course_name+"</option>");
+				}
+			},'json');
+			
+		}else if(method==="getdeg"){	//เลือกวิชา เพื่อแสดงประเภทปริญญาในแต่ละวิชา
+			courseid = value
+			$.post("/edu/building_room/time/getdeg",{ "courseid" : courseid},
+			function(res){
+				$("select#deg").html("<option selected disable>กรุณาเลือก</option>");
+				$("select#course_section").html("");
+				$("select#learn_type").html("");
+				if(res!=null){
+					for(x in res){
+						$("select#deg").append("<option value="+res[x].deg_id+">"+res[x].deg+"</option>");
+					}
+				}else{
+					if(confirm("คุณยังไม่สร้างกลุ่มเรียน ต้องการสร้างกลุ่มเรียนหรือไม่")) window.location = "/edu/course";
+					$("select#deg").html("");
+
+				}
+			},'json');
+		}else if(method=="getsection"){	//เลือกประเภทปริญญา เพื่อแสดงกลุ่มเรียน
+			$.post("/edu/building_room/time/getsection",
+			{
+				"courseid":courseid,
+				"deg":value
+			},function(res){
+				
+				$("select#course_section").html("<option selected disable>กรุณาเลือก</option>");
+				$("select#learn_type").html("");
+				for(x in res){
+					$("select#course_section").append("<option value="+res[x].course_section_id+">"+res[x].section+"</option>");
+				}
+			},'json');	
+		}else if(method==="getlearn"){	//เลือกกลุ่มเรียน เพื่อแสดงประเภทเรียน
+			sectionid = value
+			$.post("/edu/building_room/time/getlearn",{	"sectionid":value},
+			function(res){
+				$("select#learn_type").html("<option selected disable>กรุณาเลือก</option>");
+				for(x in res){
+					$("select#learn_type").append("<option value="+res[x]+">"+res[x]+"</option>");
+				}
+			},'json');
+		}else if(method === "showtable"){	// เลือกกลุ่มเรียน เพื่อแสดงตารางของห้องเรีียน
+			$.post("/edu/building_room/time/calltable",
+			{
+				"sectionid":sectionid,
+				"learn_type":value,
+				"roomid":roomid,
+				"semester":semester
+			},function(res){
+				$("div#landingtable").html(res);
+			})
+		}
+	}
+	</script>
+  {/if}
+    <div class="clear-all"></div>
+
+</div>
+</body>
+</html>

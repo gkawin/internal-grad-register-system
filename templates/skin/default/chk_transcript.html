@@ -1,0 +1,65 @@
+{include file = 'header.tpl.html'}
+<style>
+body {
+	font-family:Tahoma;
+	background:#6D3636;
+	margin:0;
+	font-size:13px;
+	height:100%;
+}
+#linkcolorblue{
+	color:#0000FF;
+}
+</style>
+<div class="container">
+    {if $page.view eq "list"}
+    <div style="padding:5pt;"><a href="/chk" style="text-decoration:underline;">หน้าหลัก</a> > ติดตามและตรวจสอบจบ</div>
+  <p>
+  <h1>เลือกรหัสนักศึกษา เพื่อตรวจสอบจบและติดตามนักศึกษา</h1>
+  <table  width="100%" cellpadding="5" id="tblist">
+    <thead  class="k-header">
+      <tr valign="top">
+        <th width="9%">รหัสนักศึกษา</th>
+        <th width="42%">ชื่อนักศึกษา</th>
+        <th width="25%">หลักสูตร</th>
+        <th width="14%">ระดับปริญญา</th>
+        <th width="10%">สถานะภาพ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {foreach $row.all as $item}
+      <tr>
+        <td><a href="/chk/transcript/docsexport/{$item.Graduate_ID}" id="linkcolorblue"><strong>
+          {$item.Graduate_ID}
+          </strong></a></td>
+        <td><img src="http://202.28.37.99/duk/admin/Manager_Graduate/images_small/{$row.image}" width="64" height="64" style="margin-right:5px;float:left;"/>
+          {$item.stdName}
+          <br>
+          {$item.stdNameEN}</td>
+        <td>{$item.edu_program}</td>
+        <td align="center">{$item.degree_name}</td>
+        <td align="center">{switch $item.graduate_status}
+          {case 1}
+          <div style="color:#FF0000;font-weight:bold;">กำลังศึกษา</div>
+          {break}
+          {case 0}
+          <div style="color:#009900;font-weight:bold;">จบการศึกษา</div>
+          {break}
+          {case 2}
+          <div style="color:#666600;font-weight:bold;">ลาออก</div>
+          {break}
+          {case 3}
+          <div style="color:#FFCC00;font-weight:bold;">รักษาสภาพ</div>
+          {break}
+          {/switch}</td>
+      </tr>
+      {/foreach}
+    </tbody>
+  </table>
+  </p>
+    {/if}
+    <div class="clear-all"></div>
+
+</div>
+</body>
+</html>
