@@ -6,9 +6,9 @@ define('ROOT_DIR', $_SERVER['DOCUMENT_ROOT']);
 define('SUPPORT_ADMIN','tongza.g@gmail.com');
 
 //database configuration
-define('DBHOST','localhost');
-define('DBUSER','root');
-define('DBPASS','0sawaddee');
+define('DBHOST','');
+define('DBUSER','');
+define('DBPASS','');
 define('DBNAME','igrs_empty');
 define('CHAR_SET','utf-8');
 define('DBTYPE','mysql');
